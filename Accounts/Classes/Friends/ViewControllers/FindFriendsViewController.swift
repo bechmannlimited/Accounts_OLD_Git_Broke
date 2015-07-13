@@ -9,13 +9,14 @@
 
 import UIKit
 import ABToolKit
+import Parse
 
 class FindFriendsViewController: BaseViewController {
 
     var tableView = UITableView()
     var matches = [User]()
     var searchController = UISearchController(searchResultsController: nil)
-    var request: JsonRequest?
+    var matchesQuery: PFQuery?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -43,20 +44,62 @@ class FindFriendsViewController: BaseViewController {
     }
     
     func getMatches(searchText: String) {
-    
-        request?.cancel()
-        request = JsonRequest.create("\(User.webApiUrls().getUrl(kActiveUser.UserID)!)/ActiveUsersMatching/\(searchText)", parameters: nil, method: .GET).onDownloadSuccess { (json, request) -> () in
+        
+        matchesQuery?.cancel()
+        matchesQuery = User.query()
+        
+        matchesQuery?.whereKey(kParse_User_Username_Key, matchesRegex: "^\(searchText)$", modifiers: "i")
+        matchesQuery?.whereKey("objectId", notEqualTo: User.currentUser()!.objectId!)
+        
+        for invite in User.currentUser()!.allInvites[0] {
             
-            self.matches = User.convertJsonToMultipleObjects(User.self, json: json)
-            self.tableView.reloadData()
+            matchesQuery?.whereKey(kParse_User_Friends_Key, notEqualTo: invite.toUser!)
+            matchesQuery?.whereKey(kParse_User_Friends_Key, notEqualTo: invite.fromUser!)
         }
+        for invite in User.currentUser()!.allInvites[1] {
+            
+            matchesQuery?.whereKey(kParse_User_Friends_Key, notEqualTo: invite.toUser!)
+            matchesQuery?.whereKey(kParse_User_Friends_Key, notEqualTo: invite.fromUser!)
+        }
+        
+        matchesQuery?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
+            
+            if var matches = objects as? [User] {
+                
+                //remove match if already in invite pool
+                for match in matches {
+                    
+                    for invite in User.currentUser()!.allInvites[0] {
+                     
+                        if invite.fromUser?.objectId == match.objectId {
+                            
+                            let index = find(matches, match)!
+                            matches.removeAtIndex(index)
+                        }
+                    }
+                    for invite in User.currentUser()!.allInvites[1] {
+                        
+                        if invite.toUser?.objectId == match.objectId {
+                            
+                            let index = find(matches, match)!
+                            matches.removeAtIndex(index)
+                        }
+                    }
+                }
+                
+                self.matches = matches
+            }
+            
+            self.tableView.reloadData()
+        })
     }
     
     func addFriend(match:User) {
         
         searchController.active = false
+        searchController.searchBar.userInteractionEnabled = false
         
-        kActiveUser.addFriend(match.UserID, completion: { (success) -> () in
+        User.currentUser()?.sendFriendRequest(match, completion: { (success) -> () in
             
             if success {
                 
@@ -69,6 +112,11 @@ class FindFriendsViewController: BaseViewController {
                 
                 UIAlertView(title: "Oops!", message: "Something went wrong!", delegate: self, cancelButtonTitle: "OK").show()
             }
+            
+            User.currentUser()?.getInvites({ (invites) -> () in
+                
+                self.searchController.searchBar.userInteractionEnabled = true
+            })
         })
     }
 }
@@ -94,7 +142,7 @@ extension FindFriendsViewController: UITableViewDelegate, UITableViewDataSource 
         
         let match = matches[indexPath.row]
         
-        cell.textLabel?.text = match.Username
+        cell.textLabel?.text = match.username
         cell.detailTextLabel?.text = "Add as friend"
         cell.detailTextLabel?.textColor = AccountColor.greenColor()
         

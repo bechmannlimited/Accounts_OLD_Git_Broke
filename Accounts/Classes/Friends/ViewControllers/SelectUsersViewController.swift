@@ -25,7 +25,7 @@ class SelectUsersViewController: ACBaseViewController {
     var tableView = UITableView()
     var selectUsersDelegate: SelectUsersDelegate?
     var selectUserDelegate: SelectUserDelegate?
-    var userIsSelected = Dictionary<Int, Bool>()
+    var userIsSelected = Dictionary<String, Bool>()
     var allowEditing = false
     var allowMultipleSelection = false
     var identifier = ""
@@ -114,7 +114,7 @@ class SelectUsersViewController: ACBaseViewController {
             
             for user in users {
                 
-                if user.UserID == values.0 {
+                if user.objectId == values.0 {
                     
                     selectedUsers.append(user)
                 }
@@ -135,7 +135,7 @@ class SelectUsersViewController: ACBaseViewController {
         
         for user in users {
             
-            userIsSelected[user.UserID] = true
+            userIsSelected[user.objectId!] = true
         }
     }
     
@@ -172,11 +172,11 @@ extension SelectUsersViewController: UITableViewDelegate, UITableViewDataSource 
 //            friend = kActiveUser
 //        }
         
-        cell.textLabel?.text = user.Username
+        cell.textLabel?.text = user.username
         
         var selected = false
         
-        if let s = userIsSelected[user.UserID] {
+        if let s = userIsSelected[user.objectId!] {
             
             selected = s
         }
@@ -196,13 +196,13 @@ extension SelectUsersViewController: UITableViewDelegate, UITableViewDataSource 
             
             if allowMultipleSelection {
                 
-                if let v = userIsSelected[user.UserID] {
+                if let v = userIsSelected[user.objectId!] {
                     
-                    userIsSelected.removeValueForKey(user.UserID)
+                    userIsSelected.removeValueForKey(user.objectId!)
                 }
                 else {
                     
-                    userIsSelected[user.UserID] = true
+                    userIsSelected[user.objectId!] = true
                 }
                 
                 tableView.reloadData()

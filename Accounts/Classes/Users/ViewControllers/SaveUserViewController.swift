@@ -10,16 +10,16 @@
 import UIKit
 import ABToolKit
 import SwiftyJSON
+import Parse
 
 class SaveUserViewController: ACFormViewController {
     
-    var user = User()
+    var user = User.object()
     var isLoading = false
     
     override func viewDidLoad() {
-        super.viewDidLoad()
         
-        if user.UserID == 0 {
+        if user.objectId == nil {
             
             title = "Register"
         }
@@ -29,6 +29,12 @@ class SaveUserViewController: ACFormViewController {
         }
         
         showOrHideRegisterButton()
+        
+        user.username = ""
+        user.password = ""
+        user.email = ""
+        
+        super.viewDidLoad()
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -48,7 +54,7 @@ class SaveUserViewController: ACFormViewController {
     
     func showOrHideRegisterButton() {
         
-        let saveButton = user.UserID == 0 ? UIBarButtonItem(title: "Register", style: .Plain, target: self, action: "save") : UIBarButtonItem(barButtonSystemItem: .Save, target: self, action: "save")
+        let saveButton = user.objectId == nil ? UIBarButtonItem(title: "Register", style: .Plain, target: self, action: "save") : UIBarButtonItem(barButtonSystemItem: .Save, target: self, action: "save")
         
         navigationItem.rightBarButtonItem = saveButton
         navigationItem.rightBarButtonItem?.tintColor = kNavigationBarPositiveActionColor
@@ -58,39 +64,21 @@ class SaveUserViewController: ACFormViewController {
     
     func save() {
         
-        if user.UserID != 0 {
+        if user.objectId != nil {
             
             isLoading = true
             showOrHideRegisterButton()
             
-            user.webApiUpdate()?.onDownloadSuccessWithRequestInfo({ (json, request, httpUrlRequest, httpUrlResponse) -> () in
-                
-                let success = httpUrlResponse!.statusCode == 200 || httpUrlResponse!.statusCode == 204
+            user.saveInBackgroundWithBlock({ (success, error) -> Void in
                 
                 if success {
                     
                     self.navigationController?.popViewControllerAnimated(true)
-                    kActiveUser = User.createObjectFromJson(json)
-                    kActiveUser.saveUserOnDevice()
                 }
-                else {
+                else if let error = error?.localizedDescription {
                     
-                    let errorsJson = json["ModelState"]["Error"]
-                    
-                    let errors = NSMutableArray()
-                    
-                    for (index: String, errorJson: JSON) in errorsJson {
-                        
-                        errors.addObject(errorJson.stringValue)
-                        println(errorJson)
-                    }
-                    
-                    let errorMsg = errors.componentsJoinedByString(",\n")
-                    
-                    UIAlertView(title: "Error", message: errorMsg, delegate: nil, cancelButtonTitle: "OK").show()
+                    UIAlertView(title: "Error", message: error, delegate: nil, cancelButtonTitle: "OK").show()
                 }
-                
-            }).onDownloadFinished({ () -> () in
                 
                 self.isLoading = false
                 self.showOrHideRegisterButton()
@@ -101,16 +89,21 @@ class SaveUserViewController: ACFormViewController {
             isLoading = true
             showOrHideRegisterButton()
             
-            user.register()?.onContextSuccess({ () -> () in
+            user.signUpInBackgroundWithBlock({ (success, error) -> Void in
                 
-                var v = UIStoryboard.initialViewControllerFromStoryboardNamed("Main")
-                self.presentViewController(v, animated: true, completion: nil)
-                
-            }).onDownloadFinished({ () -> () in
-                
-                self.isLoading = false
-                self.showOrHideRegisterButton()
+                if success {
+                    
+                    var v = UIStoryboard.initialViewControllerFromStoryboardNamed("Main")
+                    self.presentViewController(v, animated: true, completion: nil)
+                }
+                else if let error = error?.localizedDescription {
+                    
+                    UIAlertView(title: "Error", message: error, delegate: nil, cancelButtonTitle: "OK").show()
+                }
             })
+            
+            self.isLoading = false
+            self.showOrHideRegisterButton()
         }
     }
 }
@@ -121,9 +114,9 @@ extension SaveUserViewController: FormViewDelegate {
         
         var sections = Array<Array<FormViewConfiguration>>()
         sections.append([
-            FormViewConfiguration.textField("Username", value: user.Username, identifier: "Username"),
-            FormViewConfiguration.textField("Email", value: user.Email, identifier: "Email"),
-            FormViewConfiguration.textField("Password", value: user.Password, identifier: "Password")
+            FormViewConfiguration.textField("Username", value: user.username, identifier: "Username"),
+            FormViewConfiguration.textField("Email", value: user.email, identifier: "Email"),
+            FormViewConfiguration.textField("Password", value: user.password, identifier: "Password")
         ])
         return sections
     }
@@ -138,15 +131,15 @@ extension SaveUserViewController: FormViewDelegate {
         switch identifier {
             
         case "Username":
-            user.Username = text
+            user.username = text
             break
             
         case "Password":
-            user.Password = text
+            user.password = text
             break;
             
         case "Email":
-            user.Email = text
+            user.email = text
             break
             
         default: break;

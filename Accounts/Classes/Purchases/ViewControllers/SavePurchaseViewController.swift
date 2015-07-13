@@ -156,14 +156,14 @@ extension SavePurchaseViewController: FormViewDelegate {
         
         var friendConfigs: Array<FormViewConfiguration> = [
             FormViewConfiguration.normalCell("Friends"),
-            FormViewConfiguration.textFieldCurrency(purchase.user.Username, value: Formatter.formatCurrencyAsString(userAmount), identifier: "userAmount", locale: locale)
+            FormViewConfiguration.textFieldCurrency(purchase.user.username!, value: Formatter.formatCurrencyAsString(userAmount), identifier: "userAmount", locale: locale)
         ]
         
         for friend in purchase.friends {
 
             let value = purchase.billSplitDictionary[friend]!
             
-            friendConfigs.append(FormViewConfiguration.textFieldCurrency(friend.Username, value: Formatter.formatCurrencyAsString(value), identifier: "friendAmount\(friend.UserID)", locale: locale))
+            friendConfigs.append(FormViewConfiguration.textFieldCurrency(friend.username!, value: Formatter.formatCurrencyAsString(value), identifier: "friendAmount\(friend.objectId)", locale: locale))
         }
         
         sections.append(friendConfigs)
@@ -196,7 +196,7 @@ extension SavePurchaseViewController: FormViewDelegate {
         for friend in self.purchase.friends {
         
         let v = self.purchase.billSplitDictionary[friend]!
-        self.setTextFieldValueAndUpdateConfig("friendAmount\(friend.UserID)", value: Formatter.formatCurrencyAsString(v), cell: self.billSplitCells[friend])
+        self.setTextFieldValueAndUpdateConfig("friendAmount\(friend.objectId)", value: Formatter.formatCurrencyAsString(v), cell: self.billSplitCells[friend])
         //c++
         }
         
@@ -224,7 +224,7 @@ extension SavePurchaseViewController: FormViewDelegate {
         
         for friend in purchase.friends {
             
-            if identifier == "friendAmount\(friend.UserID)" {
+            if identifier == "friendAmount\(friend.objectId)" {
                 
                 purchase.billSplitDictionary[friend] = value
                 
@@ -280,18 +280,18 @@ extension SavePurchaseViewController: FormViewDelegate {
         
         if identifier == "Friends" {
             
-            let usersToChooseFrom = User.userListExcludingID(purchase.user.UserID)
-            
-            let v = SelectUsersViewController(identifier: identifier, users: purchase.friends, selectUsersDelegate: self, allowEditing: allowEditing, usersToChooseFrom: usersToChooseFrom)
-            navigationController?.pushViewController(v, animated: true)
+//            let usersToChooseFrom = User.userListExcludingID(purchase.user.UserID)
+//            
+//            let v = SelectUsersViewController(identifier: identifier, users: purchase.friends, selectUsersDelegate: self, allowEditing: allowEditing, usersToChooseFrom: usersToChooseFrom)
+//            navigationController?.pushViewController(v, animated: true)
         }
         
         if identifier == "User" {
             
-            let usersToChooseFrom = User.userListExcludingID(nil)
-            
-            let v = SelectUsersViewController(identifier: identifier, user: purchase.user, selectUserDelegate: self, allowEditing: allowEditing, usersToChooseFrom: usersToChooseFrom)
-            navigationController?.pushViewController(v, animated: true)
+//            let usersToChooseFrom = User.userListExcludingID(nil)
+//            
+//            let v = SelectUsersViewController(identifier: identifier, user: purchase.user, selectUserDelegate: self, allowEditing: allowEditing, usersToChooseFrom: usersToChooseFrom)
+//            navigationController?.pushViewController(v, animated: true)
         }
     }
     
@@ -318,7 +318,7 @@ extension SavePurchaseViewController: FormViewDelegate {
             
             for friend in purchase.friends {
                 
-                if friend.UserID == purchase.user.UserID {
+                if friend.objectId == purchase.user.objectId {
                     
                     friendCount--
                 }
@@ -332,7 +332,7 @@ extension SavePurchaseViewController: FormViewDelegate {
         else if identifier == "User" {
             
             cell.textLabel?.text = "Purchased by "
-            cell.detailTextLabel?.text = "\(purchase.user.Username)"
+            cell.detailTextLabel?.text = "\(purchase.user.username!)"
             cell.accessoryType = UITableViewCellAccessoryType.DisclosureIndicator
             
             return cell

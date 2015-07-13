@@ -54,28 +54,28 @@ class SaveTransactionViewController: ACFormViewController {
         isSaving = true
         showOrHideSaveButton()
         
-        transaction.save()?.onDownloadSuccessWithRequestInfo({ (json, request, httpUrlRequest, httpUrlResponse) -> () in
-            
-            if httpUrlResponse?.statusCode == 200 || httpUrlResponse?.statusCode == 201 || httpUrlResponse?.statusCode == 204 {
-                
-                self.transaction.TransactionID = json["TransactionID"].intValue
-                self.delegate?.transactionDidChange(self.transaction)
-                
-                self.navigationController?.dismissViewControllerAnimated(true, completion: nil)
-                self.navigationController?.popoverPresentationController?.delegate?.popoverPresentationControllerDidDismissPopover?(self.navigationController!.popoverPresentationController!)
-                
-                self.delegate?.itemDidChange()
-            }
-            else {
-                
-                UIAlertView(title: "Error", message: "Transaction not saved!", delegate: nil, cancelButtonTitle: "OK").show()
-            }
-            
-        }).onDownloadFinished({ () -> () in
-            
-            self.isSaving = false
-            self.showOrHideSaveButton()
-        })
+//        transaction.save()?.onDownloadSuccessWithRequestInfo({ (json, request, httpUrlRequest, httpUrlResponse) -> () in
+//            
+//            if httpUrlResponse?.statusCode == 200 || httpUrlResponse?.statusCode == 201 || httpUrlResponse?.statusCode == 204 {
+//                
+//                self.transaction.TransactionID = json["TransactionID"].intValue
+//                self.delegate?.transactionDidChange(self.transaction)
+//                
+//                self.navigationController?.dismissViewControllerAnimated(true, completion: nil)
+//                self.navigationController?.popoverPresentationController?.delegate?.popoverPresentationControllerDidDismissPopover?(self.navigationController!.popoverPresentationController!)
+//                
+//                self.delegate?.itemDidChange()
+//            }
+//            else {
+//                
+//                UIAlertView(title: "Error", message: "Transaction not saved!", delegate: nil, cancelButtonTitle: "OK").show()
+//            }
+//            
+//        }).onDownloadFinished({ () -> () in
+//            
+//            self.isSaving = false
+//            self.showOrHideSaveButton()
+//        })
     }
     
     func pop() {
@@ -172,7 +172,7 @@ extension SaveTransactionViewController: FormViewDelegate {
         if identifier == "Friend" {
             
             cell.textLabel?.text = "Transfer to"
-            cell.detailTextLabel?.text = "\(transaction.friend.Username)"
+            cell.detailTextLabel?.text = "\(transaction.friend?.username)"
             cell.accessoryType = UITableViewCellAccessoryType.DisclosureIndicator
             
             return cell
@@ -181,7 +181,7 @@ extension SaveTransactionViewController: FormViewDelegate {
         if identifier == "User" {
             
             cell.textLabel?.text = "Transfer from"
-            cell.detailTextLabel?.text = "\(transaction.user.Username)"
+            cell.detailTextLabel?.text = "\(transaction.user?.username)"
             cell.accessoryType = UITableViewCellAccessoryType.DisclosureIndicator
             
             return cell
@@ -223,13 +223,13 @@ extension SaveTransactionViewController: FormViewDelegate {
                 
                 if response == AlertResponse.Confirm {
                     
-                    self.transaction.webApiDelete()?.onDownloadFinished({ () -> () in
-                        
-                        self.navigationController?.dismissViewControllerAnimated(true, completion: nil)
-                        self.navigationController?.popoverPresentationController?.delegate?.popoverPresentationControllerDidDismissPopover?(self.navigationController!.popoverPresentationController!)
-                        
-                        self.delegate?.itemDidGetDeleted()
-                    })
+//                    self.transaction.webApiDelete()?.onDownloadFinished({ () -> () in
+//                        
+//                        self.navigationController?.dismissViewControllerAnimated(true, completion: nil)
+//                        self.navigationController?.popoverPresentationController?.delegate?.popoverPresentationControllerDidDismissPopover?(self.navigationController!.popoverPresentationController!)
+//                        
+//                        self.delegate?.itemDidGetDeleted()
+//                    })
                 }
             })
         }
@@ -239,18 +239,18 @@ extension SaveTransactionViewController: FormViewDelegate {
         
         if identifier == "Friend" {
 
-            let usersToChooseFrom = User.userListExcludingID(transaction.user.UserID)
-            
-            let v = SelectUsersViewController(identifier: identifier, user: transaction.friend, selectUserDelegate: self, allowEditing: allowEditing, usersToChooseFrom: usersToChooseFrom)
-            navigationController?.pushViewController(v, animated: true)
+//            let usersToChooseFrom = User.userListExcludingID(transaction.user.UserID)
+//            
+//            let v = SelectUsersViewController(identifier: identifier, user: transaction.friend, selectUserDelegate: self, allowEditing: allowEditing, usersToChooseFrom: usersToChooseFrom)
+//            navigationController?.pushViewController(v, animated: true)
         }
         
         if identifier == "User" {
             
-            let usersToChooseFrom = User.userListExcludingID(nil)
-            
-            let v = SelectUsersViewController(identifier: identifier, user: transaction.user, selectUserDelegate: self, allowEditing: allowEditing, usersToChooseFrom: usersToChooseFrom)
-            navigationController?.pushViewController(v, animated: true)
+//            let usersToChooseFrom = User.userListExcludingID(nil)
+//            
+//            let v = SelectUsersViewController(identifier: identifier, user: transaction.user, selectUserDelegate: self, allowEditing: allowEditing, usersToChooseFrom: usersToChooseFrom)
+//            navigationController?.pushViewController(v, animated: true)
         }
     }
     

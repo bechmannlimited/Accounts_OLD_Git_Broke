@@ -64,91 +64,93 @@ class Purchase: JSONObject {
         //registerClass(User.self, propertyKey: "friends", jsonKey: "RelationUsers")
     }
     
-    override func setExtraPropertiesFromJSON(json: JSON) {
-        
-        user.UserID = json["UserID"].intValue
-        
-        //friends = User.convertJsonToMultipleObjects(User.self, json: json["RelationUsers"])
-        
-        user = User.createObjectFromJson(json["User"])
-        
-        for (key: String, subJson: JSON) in json["RelationUserAmounts"] {
-            
-            let amount = subJson["Amount"].doubleValue
-            let friend:User = User.createObjectFromJson(subJson["User"])
-            
-            if friend.UserID == user.UserID {
-                
-                billSplitDictionary[user] = amount
-            }
-            else {
-                
-                friends.append(friend)
-                billSplitDictionary[friend] = amount
-            }
-        }
-    }
+//    override func setExtraPropertiesFromJSON(json: JSON) {
+//        
+//        user.UserID = json["UserID"].intValue
+//        
+//        //friends = User.convertJsonToMultipleObjects(User.self, json: json["RelationUsers"])
+//        
+//        user = User.createObjectFromJson(json["User"])
+//        
+//        for (key: String, subJson: JSON) in json["RelationUserAmounts"] {
+//            
+//            let amount = subJson["Amount"].doubleValue
+//            let friend:User = User.createObjectFromJson(subJson["User"])
+//            
+//            if friend.UserID == user.UserID {
+//                
+//                billSplitDictionary[user] = amount
+//            }
+//            else {
+//                
+//                friends.append(friend)
+//                billSplitDictionary[friend] = amount
+//            }
+//        }
+//    }
     
     func save() -> JsonRequest? {
         
-        if !modelIsValid() {
-            
-            return nil
-        }
-
-        var urlString = ""
-        let httpMethod: Alamofire.Method = PurchaseID == 0 ? .POST : .PUT
+//        if !modelIsValid() {
+//            
+//            return nil
+//        }
+//
+//        var urlString = ""
+//        let httpMethod: Alamofire.Method = PurchaseID == 0 ? .POST : .PUT
+//        
+//        if PurchaseID > 0 {
+//            
+//            urlString = Purchase.webApiUrls().updateUrl(PurchaseID)!
+//        }
+//        else {
+//            
+//            urlString = Purchase.webApiUrls().insertUrl()!
+//        }
+//        
+//        var c = 0
+//        
+//        var friendsToInclude = friends
+//        friendsToInclude.append(user)
+//        
+//        for user in friendsToInclude {
+//            
+//            let amount = billSplitDictionary[user]!
+//            
+//            let prefix = c == 0 ? "?" : "&"
+//            urlString = urlString + "\(prefix)RelationUserIDs=\(user.UserID)&RelationUserAmounts=\(amount)"
+//            c++
+//        }
+//        
+//        //let prefix = urlString.contains("?") ? "&" : "?"
+//        //urlString += "\(prefix)activeUserID=\(kActiveUser.UserID)"
+//    
+//        var params = convertToDictionary(["Description", "Amount", "PurchaseID"], includeNestedProperties: false)
+//        params["UserID"] = user.UserID
+//        params["DateEntered"] = DateEntered.toString(JSONMappingDefaults.sharedInstance().webApiSendDateFormat)
+//        params["DatePurchased"] = DatePurchased.toString(JSONMappingDefaults.sharedInstance().webApiSendDateFormat)
+//
+//        println(urlString)
+//        println(params)
+//        println(Alamofire.Manager.sharedInstance.session.configuration.HTTPAdditionalHeaders)
+//        
+//        return JsonRequest.create(urlString, parameters: params, method: httpMethod).onDownloadSuccessWithRequestInfo({ (json, request, httpUrlRequest, httpUrlResponse) -> () in
+//
+//            println(httpUrlResponse?.statusCode)
+//            println(json)
+//            
+//            if httpUrlResponse?.statusCode == 200 || httpUrlResponse?.statusCode == 201 || httpUrlResponse?.statusCode == 204 {
+//                
+//                request.succeedContext()
+//            }
+//            else {
+//                
+//                request.failContext()
+//            }
+//            
+//        })
         
-        if PurchaseID > 0 {
-            
-            urlString = Purchase.webApiUrls().updateUrl(PurchaseID)!
-        }
-        else {
-            
-            urlString = Purchase.webApiUrls().insertUrl()!
-        }
-        
-        var c = 0
-        
-        var friendsToInclude = friends
-        friendsToInclude.append(user)
-        
-        for user in friendsToInclude {
-            
-            let amount = billSplitDictionary[user]!
-            
-            let prefix = c == 0 ? "?" : "&"
-            urlString = urlString + "\(prefix)RelationUserIDs=\(user.UserID)&RelationUserAmounts=\(amount)"
-            c++
-        }
-        
-        //let prefix = urlString.contains("?") ? "&" : "?"
-        //urlString += "\(prefix)activeUserID=\(kActiveUser.UserID)"
-    
-        var params = convertToDictionary(["Description", "Amount", "PurchaseID"], includeNestedProperties: false)
-        params["UserID"] = user.UserID
-        params["DateEntered"] = DateEntered.toString(JSONMappingDefaults.sharedInstance().webApiSendDateFormat)
-        params["DatePurchased"] = DatePurchased.toString(JSONMappingDefaults.sharedInstance().webApiSendDateFormat)
-
-        println(urlString)
-        println(params)
-        println(Alamofire.Manager.sharedInstance.session.configuration.HTTPAdditionalHeaders)
-        
-        return JsonRequest.create(urlString, parameters: params, method: httpMethod).onDownloadSuccessWithRequestInfo({ (json, request, httpUrlRequest, httpUrlResponse) -> () in
-
-            println(httpUrlResponse?.statusCode)
-            println(json)
-            
-            if httpUrlResponse?.statusCode == 200 || httpUrlResponse?.statusCode == 201 || httpUrlResponse?.statusCode == 204 {
-                
-                request.succeedContext()
-            }
-            else {
-                
-                request.failContext()
-            }
-            
-        })
+        return nil // temp
     }
     
     func splitTheBill() {
@@ -192,7 +194,7 @@ class Purchase: JSONObject {
             
             if billSplitDictionary[friend] == nil || billSplitDictionary[friend] == 0 {
                 
-                errors.append("\(friend.Username) hasn't got an amount associated")
+                errors.append("\(friend.username) hasn't got an amount associated")
             }
         }
         

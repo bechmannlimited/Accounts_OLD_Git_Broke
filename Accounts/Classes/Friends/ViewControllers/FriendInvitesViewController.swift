@@ -22,7 +22,7 @@ protocol FriendInvitesDelegate {
 class FriendInvitesViewController: ACBaseViewController {
 
     var tableView = UITableView(frame: CGRectZero, style: .Grouped)
-    var invites:Array<Array<User>> = []
+    var invites:Array<Array<FriendRequest>> = []
     var delegate: FriendInvitesDelegate?
     var noDataView = UILabel()
     
@@ -82,17 +82,15 @@ class FriendInvitesViewController: ACBaseViewController {
 
     override func refresh(refreshControl: UIRefreshControl?) {
         
-        kActiveUser.getInvites { (invites) -> () in
+        User.currentUser()?.getInvites({ (invites) -> () in
             
             self.invites = invites
-            
-        }.onDownloadFinished { () -> () in
             
             self.tableView.reloadData()
             refreshControl?.endRefreshing()
             self.view.hideLoader()
             self.showOrHideTableOrNoDataView()
-        }
+        })
     }
     
     func findFriends() {
@@ -120,9 +118,18 @@ extension FriendInvitesViewController: UITableViewDelegate, UITableViewDataSourc
             return UITableViewCell(style: .Value1, reuseIdentifier: identifier)
         })
         
-        let user = invites[indexPath.section][indexPath.row]
+        var user: User?
         
-        cell.textLabel?.text = user.Username
+        if indexPath.section == kUnconfirmedInvitesSection {
+            
+            user = invites[indexPath.section][indexPath.row].fromUser
+        }
+        else if indexPath.section == kUnconfirmedSentInvitesSection {
+            
+            user = invites[indexPath.section][indexPath.row].toUser
+        }
+
+        cell.textLabel?.text = user!.username
         
         if indexPath.section == kUnconfirmedInvitesSection {
             
@@ -141,19 +148,30 @@ extension FriendInvitesViewController: UITableViewDelegate, UITableViewDataSourc
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         
+        let friendRequest = invites[indexPath.section][indexPath.row]
+        let user = friendRequest.fromUser!
+        
         if indexPath.section == kUnconfirmedInvitesSection {
             
-            let user = invites[indexPath.section][indexPath.row]
-            
-            tableView.beginUpdates()
-            invites[indexPath.section].removeAtIndex(indexPath.row)
-            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Top)
-            tableView.endUpdates()
-            
-            kActiveUser.addFriend(user.UserID, completion: { (success) -> () in
+            User.currentUser()?.addFriendFromRequest(friendRequest, completion: { (success) -> () in
                 
                 self.refresh(nil)
                 self.delegate?.friendsChanged()
+            })
+        }
+        
+        if indexPath.section == kUnconfirmedSentInvitesSection {
+            
+            tableView.beginUpdates()
+            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Top)
+            invites[indexPath.section].removeAtIndex(indexPath.row)
+            tableView.endUpdates()
+            
+            friendRequest.deleteInBackgroundWithBlock({ (success, error) -> Void in
+                
+                println(success)
+                println(error)
+                self.refresh(nil)
             })
         }
         
@@ -189,31 +207,7 @@ extension FriendInvitesViewController: UITableViewDelegate, UITableViewDataSourc
     
     func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
         
-        let user = invites[indexPath.section][indexPath.row]
-        
-        if indexPath.section == kUnconfirmedInvitesSection && editingStyle == .Insert {
-            
-            kActiveUser.addFriend(user.UserID, completion: { (success) -> () in
-                
-                self.refresh(nil)
-                self.delegate?.friendsChanged()
-            })
-        }
-        
-        if indexPath.section == kUnconfirmedSentInvitesSection && editingStyle == .Delete {
-            
-            tableView.beginUpdates()
-            tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: .Top)
-            invites[indexPath.section].removeAtIndex(indexPath.row)
-            tableView.endUpdates()
-            
-            kActiveUser.removeFriend(user.UserID, completion: { (success) -> () in
-                
-                self.refresh(nil)
-            })
-        }
-        
-        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+        tableView.delegate?.tableView?(tableView, didSelectRowAtIndexPath: indexPath)
     }
     
     func tableView(tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {

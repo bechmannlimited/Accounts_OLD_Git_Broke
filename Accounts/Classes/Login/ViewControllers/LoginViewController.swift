@@ -8,6 +8,7 @@
 
 import UIKit
 import ABToolKit
+import Parse
 
 class LoginViewController: ACFormViewController {
 
@@ -36,25 +37,21 @@ class LoginViewController: ACFormViewController {
     func login() {
         
         isLoading = true
-        self.showOrHideLoginButton()
+        showOrHideLoginButton()
         
-        var showAlert: () -> () = {
+        if user.username?.length() > 0 && user.password?.length() > 0 {
             
-            UIAlertView(title: "Login failed!", message: "Incorrect username or password!", delegate: nil, cancelButtonTitle: "OK").show()
-        }
-        
-        if user.Username.length() > 0 && user.Password.length() > 0 {
-            
-            User.login(user.Username, password: user.Password).onContextSuccess { () -> () in
+            User.logInWithUsernameInBackground(user.username!, password: user.password!, block: { (user, error) -> Void in
                 
-                var v = UIStoryboard.initialViewControllerFromStoryboardNamed("Main")
-                self.presentViewController(v, animated: true, completion: nil)
-                
-            }.onContextFailure { () -> () in
+                if let error = error {
                     
-                showAlert()
-                
-            }.onDownloadFinished({ () -> () in
+                    UIAlertView(title: "Login failed!", message: error.localizedDescription, delegate: nil, cancelButtonTitle: "OK").show()
+                }
+                else {
+                    
+                    var v = UIStoryboard.initialViewControllerFromStoryboardNamed("Main")
+                    self.presentViewController(v, animated: true, completion: nil)
+                }
                 
                 self.isLoading = false
                 self.showOrHideLoginButton()
@@ -62,7 +59,7 @@ class LoginViewController: ACFormViewController {
         }
         else {
             
-            showAlert()
+            UIAlertView(title: "Login failed!", message: "Username, password and email are required fields.", delegate: nil, cancelButtonTitle: "OK").show()
         }
     }
     
@@ -93,11 +90,11 @@ extension LoginViewController: FormViewDelegate {
         switch identifier {
             
         case "Username":
-        user.Username = text
+        user.username = text
         break
             
         case "Password":
-        user.Password = text
+        user.password = text
         break;
             
         default: break;

@@ -19,6 +19,8 @@ private let kPopoverContentSize = CGSize(width: 320, height: 360)
 
 class FriendsViewController: ACBaseViewController {
 
+    var friends = [User]()
+    
     var tableView = UITableView(frame: CGRectZero, style: UITableViewStyle.Grouped)
     
     var addBarButtonItem: UIBarButtonItem?
@@ -27,7 +29,6 @@ class FriendsViewController: ACBaseViewController {
     var noDataView = UILabel()
     
     var popoverViewController: UIViewController?
-    
     var toolbar = UIToolbar()
     
     
@@ -60,6 +61,12 @@ class FriendsViewController: ACBaseViewController {
         setEditing(false, animated: false)
     }
     
+    override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        refresh(nil)
+    }
+    
     override func setEditing(editing: Bool, animated: Bool) {
         super.setEditing(editing, animated: animated)
         
@@ -81,7 +88,7 @@ class FriendsViewController: ACBaseViewController {
         var emptyBarButtonItem = UIBarButtonItem(barButtonSystemItem: .FixedSpace, target: nil, action: nil)
         emptyBarButtonItem.width = 0
         
-        addBarButtonItem = kActiveUser.friends.count > 0 ? UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "add") : emptyBarButtonItem
+        addBarButtonItem = friends.count > 0 ? UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "add") : emptyBarButtonItem
         
         friendInvitesBarButtonItem = UIBarButtonItem(title: "Invites", style: .Plain, target: self, action: "friendInvites")
         openMenuBarButtonItem = UIBarButtonItem(image: kMenuIcon, style: .Plain, target: self, action: "openMenu")
@@ -121,7 +128,7 @@ class FriendsViewController: ACBaseViewController {
         var friendsWhoAreEven = Array<User>()
         
         //owes you money
-        for friend in kActiveUser.friends {
+        for friend in friends {
             
             if friend.localeDifferenceBetweenActiveUser < 0 {
                 
@@ -129,7 +136,7 @@ class FriendsViewController: ACBaseViewController {
             }
         }
         
-        for friend in kActiveUser.friends {
+        for friend in friends {
             
             if friend.localeDifferenceBetweenActiveUser > 0 {
                 
@@ -137,7 +144,7 @@ class FriendsViewController: ACBaseViewController {
             }
         }
         
-        for friend in kActiveUser.friends {
+        for friend in friends {
             
             if friend.localeDifferenceBetweenActiveUser == 0 {
                 
@@ -148,12 +155,6 @@ class FriendsViewController: ACBaseViewController {
         return [friendsWhoOweMoney, friendsWhoYouOweMoney, friendsWhoAreEven]
     }
     
-    override func viewDidAppear(animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        refresh(nil)
-    }
-    
     override func setupTableView(tableView: UITableView, delegate: UITableViewDelegate, dataSource: UITableViewDataSource) {
         super.setupTableView(tableView, delegate: delegate, dataSource: dataSource)
         
@@ -162,8 +163,9 @@ class FriendsViewController: ACBaseViewController {
     
     override func refresh(refreshControl: UIRefreshControl?) {
         
-        refreshRequest?.cancel()
-        refreshRequest = kActiveUser.getFriends().onDownloadFinished({ () -> () in
+        User.currentUser()?.relationForKey(kParse_User_Friends_Key).query()?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
+            
+            self.friends = objects as! [User]
             
             refreshControl?.endRefreshing()
             self.tableView.reloadData()
@@ -207,9 +209,9 @@ class FriendsViewController: ACBaseViewController {
         
         UIView.animateWithDuration(kAnimationDuration, animations: { () -> Void in
             
-            self.noDataView.layer.opacity = kActiveUser.friends.count > 0 ? 0 : 1
-            self.tableView.layer.opacity = kActiveUser.friends.count > 0 ? 1 : 1
-            self.tableView.separatorColor = kActiveUser.friends.count > 0 ? kDefaultSeperatorColor : .clearColor()
+            self.noDataView.layer.opacity = self.friends.count > 0 ? 0 : 1
+            self.tableView.layer.opacity = self.friends.count > 0 ? 1 : 1
+            self.tableView.separatorColor = self.friends.count > 0 ? kDefaultSeperatorColor : .clearColor()
         })
     }
 }
@@ -238,7 +240,7 @@ extension FriendsViewController: UITableViewDelegate, UITableViewDataSource {
         
         let friend = data()[indexPath.section][indexPath.row]
         
-        cell.textLabel?.text = friend.Username
+        cell.textLabel?.text = friend.username
         let amount = friend.localeDifferenceBetweenActiveUser //abs()
         
         var tintColor = UIColor.lightGrayColor()
@@ -314,18 +316,18 @@ extension FriendsViewController: UITableViewDelegate, UITableViewDataSource {
         
         let friend = data()[indexPath.section][indexPath.row]
         
-        UIAlertController.showAlertControllerWithButtonTitle("Delete", confirmBtnStyle: .Destructive, message: "Are you sure you want to remove \(friend.Username) as a friend?") { (response) -> () in
+        UIAlertController.showAlertControllerWithButtonTitle("Delete", confirmBtnStyle: .Destructive, message: "Are you sure you want to remove \(friend.username!) as a friend?") { (response) -> () in
             
             if response == .Confirm {
                 
-                let index = find(kActiveUser.friends, friend)!
+                let index = find(self.friends, friend)!
                 
                 tableView.beginUpdates()
-                kActiveUser.friends.removeAtIndex(index)
+                self.friends.removeAtIndex(index)
                 tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Top)
                 tableView.endUpdates()
                 
-                kActiveUser.removeFriend(friend.UserID, completion: { (success) -> () in
+                User.currentUser()?.removeFriend(friend, completion: { (success) -> () in
 
                     self.refresh(nil)
                 })

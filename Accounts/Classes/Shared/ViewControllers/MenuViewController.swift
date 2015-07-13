@@ -39,13 +39,13 @@ class MenuViewController: ACBaseViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        if kActiveUser.UserID == 6 {
-            
-            data = [
-                [kProfileIndexPath, kLogoutIndexPath],
-                [kCurrencyIndexPath]
-            ]
-        }
+//        if kActiveUser.UserID == 6 {
+//            
+//            data = [
+//                [kProfileIndexPath, kLogoutIndexPath],
+//                [kCurrencyIndexPath]
+//            ]
+//        }
         
         setupTableView(tableView, delegate: self, dataSource: self)
         
@@ -118,10 +118,18 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
                 
                 if response == AlertResponse.Confirm {
                     
-                    kActiveUser.logout()
-                    
-                    let v = UIStoryboard.initialViewControllerFromStoryboardNamed("Login")
-                    self.presentViewController(v, animated: true, completion: nil)
+                    User.logOutInBackgroundWithBlock({ (error) -> Void in
+                        
+                        if let error = error {
+                            
+                            
+                        }
+                        else{
+                            
+                            let v = UIStoryboard.initialViewControllerFromStoryboardNamed("Login")
+                            self.presentViewController(v, animated: true, completion: nil)
+                        }
+                    })
                 }
                 else {
                     
@@ -134,12 +142,13 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
             let v = SaveUserViewController()
             
             let user = User()
+            let currentUser = User.currentUser()
             
-            user.UserID = kActiveUser.UserID
-            user.Email = kActiveUser.Email
-            user.Username = kActiveUser.Username
+//            user.objectId = currentUser.UserID
+//            user = currentUser.Email
+//            user.Username = currentUser.Username
             
-            v.user = user
+            v.user = User.currentUser()!
             
             navigationController?.pushViewController(v, animated: true)
         }
@@ -149,7 +158,7 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
         
         if section == kProfileSection {
             
-            return "Logged in as \(kActiveUser.Username)"
+            return "Logged in as \(User.currentUser()!.username!)"
         }
         
         return ""

@@ -58,7 +58,7 @@ class TransactionsViewController: ACBaseViewController {
         }
         
         setupTableView(tableView, delegate: self, dataSource: self)
-        title = "Transactions with \(friend.Username)"
+        title = "Transactions with \(friend.username)"
         
         addBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "add")
         navigationItem.rightBarButtonItem = addBarButtonItem
@@ -88,23 +88,23 @@ class TransactionsViewController: ACBaseViewController {
     
     func getDifferenceAndRefreshIfNeccessary(refreshControl: UIRefreshControl?) {
         
-        kActiveUser.getDifferenceBetweenFriend(friend, completion: { (difference, count) -> () in
-         
-            let previousDifference = self.friend.DifferenceBetweenActiveUser
-            self.friend.DifferenceBetweenActiveUser = difference
-            
-            self.tableView.beginUpdates()
-            self.tableView.endUpdates()
-            
-            if previousDifference != difference {
-                
-                self.executeActualRefreshByHiding(true, refreshControl: nil, take: nil, completion: nil)
-            }
-            else {
-                
-                refreshControl?.endRefreshing()
-            }
-        })
+//        kActiveUser.getDifferenceBetweenFriend(friend, completion: { (difference, count) -> () in
+//         
+//            let previousDifference = self.friend.DifferenceBetweenActiveUser
+//            self.friend.DifferenceBetweenActiveUser = difference
+//            
+//            self.tableView.beginUpdates()
+//            self.tableView.endUpdates()
+//            
+//            if previousDifference != difference {
+//                
+//                self.executeActualRefreshByHiding(true, refreshControl: nil, take: nil, completion: nil)
+//            }
+//            else {
+//                
+//                refreshControl?.endRefreshing()
+//            }
+//        })
     }
     
     override func setupTableView(tableView: UITableView, delegate: UITableViewDelegate, dataSource: UITableViewDataSource) {
@@ -132,26 +132,26 @@ class TransactionsViewController: ACBaseViewController {
         }
         
         refreshRequest?.cancel()
-        refreshRequest = kActiveUser.getTransactionsBetweenFriend(friend, skip: 0, take: take, completion: { (transactions) -> () in
-            
-            self.transactions = transactions
-            self.hasLoadedFirstTime = true
-            
-        }).onDownloadFinished({ () -> () in
-            
-            refreshControl?.endRefreshing()
-            self.tableView.reloadData()
-            
-            self.view.hideLoader()
-            self.showOrHideTableOrNoDataView()
-            
-            //just in case
-            self.loadMoreView.hideLoader()
-            
-            self.findAndScrollToCalculatedSelectedCellAtIndexPath()
-            
-            completion?()
-        })
+//        refreshRequest = kActiveUser.getTransactionsBetweenFriend(friend, skip: 0, take: take, completion: { (transactions) -> () in
+//            
+//            self.transactions = transactions
+//            self.hasLoadedFirstTime = true
+//            
+//        }).onDownloadFinished({ () -> () in
+//            
+//            refreshControl?.endRefreshing()
+//            self.tableView.reloadData()
+//            
+//            self.view.hideLoader()
+//            self.showOrHideTableOrNoDataView()
+//            
+//            //just in case
+//            self.loadMoreView.hideLoader()
+//            
+//            self.findAndScrollToCalculatedSelectedCellAtIndexPath()
+//            
+//            completion?()
+//        })
 
     }
     
@@ -270,35 +270,35 @@ class TransactionsViewController: ACBaseViewController {
     
     func loadMore() {
         
-        if !isLoadingMore && canLoadMore && hasLoadedFirstTime {
-            
-            isLoadingMore = true
-            canLoadMore = false
-            
-            animateTableFooterViewHeight(kLoaderTableFooterViewHeight, completion: nil)
-            
-            loadMoreView.showLoader()
-            
-            loadMoreRequest = kActiveUser.getTransactionsBetweenFriend(friend, skip: transactions.count, take: nil, completion: { (transactions) -> () in
-                
-                for transaction in transactions {
-                    
-                    self.transactions.append(transaction)
-                }
-                
-            }).onDownloadFinished({ () -> () in
-                
-                self.tableView.reloadData()
-                self.isLoadingMore = false
-                self.loadMoreView.hideLoader()
-                
-                NSTimer.schedule(delay: 0.2, handler: { timer in
-                    
-                    self.animateTableFooterViewHeight(0, completion: { () -> () in
-                    })
-                })
-            })
-        }
+//        if !isLoadingMore && canLoadMore && hasLoadedFirstTime {
+//            
+//            isLoadingMore = true
+//            canLoadMore = false
+//            
+//            animateTableFooterViewHeight(kLoaderTableFooterViewHeight, completion: nil)
+//            
+//            loadMoreView.showLoader()
+//            
+//            loadMoreRequest = kActiveUser.getTransactionsBetweenFriend(friend, skip: transactions.count, take: nil, completion: { (transactions) -> () in
+//                
+//                for transaction in transactions {
+//                    
+//                    self.transactions.append(transaction)
+//                }
+//                
+//            }).onDownloadFinished({ () -> () in
+//                
+//                self.tableView.reloadData()
+//                self.isLoadingMore = false
+//                self.loadMoreView.hideLoader()
+//                
+//                NSTimer.schedule(delay: 0.2, handler: { timer in
+//                    
+//                    self.animateTableFooterViewHeight(0, completion: { () -> () in
+//                    })
+//                })
+//            })
+//        }
     }
     
     func add() {
@@ -376,17 +376,17 @@ extension TransactionsViewController: UITableViewDelegate, UITableViewDataSource
             let dateString:String = transaction.purchase.DatePurchased.toString(DateFormat.Date.rawValue)
             cell.textLabel?.text = "\(transaction.purchase.Description)"
             
-            if transaction.purchase.user.UserID == kActiveUser.UserID {
-                
-                //moneyIsOwedToActiveUser
-                amount = -amount
-                cell.detailTextLabel?.textColor = AccountColor.negativeColor()
-            }
-            else {
-                
-                //activeUserOwes
-                cell.detailTextLabel?.textColor = AccountColor.positiveColor()
-            }
+//            if transaction.purchase.user.UserID == kActiveUser.UserID {
+//                
+//                //moneyIsOwedToActiveUser
+//                amount = -amount
+//                cell.detailTextLabel?.textColor = AccountColor.negativeColor()
+//            }
+//            else {
+//                
+//                //activeUserOwes
+//                cell.detailTextLabel?.textColor = AccountColor.positiveColor()
+//            }
         
             cell.imageView?.image = kPurchaseImage
         }
@@ -395,17 +395,17 @@ extension TransactionsViewController: UITableViewDelegate, UITableViewDataSource
             let dateString:String = transaction.TransactionDate.toString(DateFormat.Date.rawValue)
             cell.textLabel?.text = "\(transaction.Description)"
             
-            if transaction.user.UserID == kActiveUser.UserID {
-                
-                //moneyIsOwedToActiveUser
-                amount = -amount
-                cell.detailTextLabel?.textColor = AccountColor.negativeColor()
-            }
-            else {
-                
-                //activeUserOwes
-                cell.detailTextLabel?.textColor = AccountColor.positiveColor()
-            }
+//            if transaction.user.UserID == kActiveUser.UserID {
+//                
+//                //moneyIsOwedToActiveUser
+//                amount = -amount
+//                cell.detailTextLabel?.textColor = AccountColor.negativeColor()
+//            }
+//            else {
+//                
+//                //activeUserOwes
+//                cell.detailTextLabel?.textColor = AccountColor.positiveColor()
+//            }
             
             cell.imageView?.image = kTransactionImage
         }
@@ -458,14 +458,14 @@ extension TransactionsViewController: UITableViewDelegate, UITableViewDataSource
     
     func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         
-        if friend.DifferenceBetweenActiveUser > 0 {
-            
-            return "\(friend.Username) owes you: \(Formatter.formatCurrencyAsString(abs(friend.DifferenceBetweenActiveUser)))"
-        }
-        else if friend.DifferenceBetweenActiveUser < 0 {
-            
-            return "You owe \(friend.Username): \(Formatter.formatCurrencyAsString(abs(friend.DifferenceBetweenActiveUser)))"
-        }
+//        if friend.DifferenceBetweenActiveUser > 0 {
+//            
+//            return "\(friend.Username) owes you: \(Formatter.formatCurrencyAsString(abs(friend.DifferenceBetweenActiveUser)))"
+//        }
+//        else if friend.DifferenceBetweenActiveUser < 0 {
+//            
+//            return "You owe \(friend.Username): \(Formatter.formatCurrencyAsString(abs(friend.DifferenceBetweenActiveUser)))"
+//        }
         
         return ""
     }

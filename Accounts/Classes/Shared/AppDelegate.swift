@@ -14,7 +14,7 @@ import Alamofire
 import Parse
 import Bolts
 
-var kActiveUser = User()
+var kActiveUser:User = User.object()
 let kDevice = UIDevice.currentDevice().userInterfaceIdiom
 
 let kViewBackgroundColor = UIColor.groupTableViewBackgroundColor()
@@ -44,7 +44,7 @@ let kTableViewCellIpadCornerRadiusSize = CGSize(width: 5, height: 5)
 
 let kDefaultSeperatorColor = UITableView().separatorColor
 
-let kParseInstallationUserIDKey = "API_UserID"
+let kParseInstallationUserKey = "User"
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -68,19 +68,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         setupAppearances()
         
-        if let user = User.userSavedOnDevice() {
-            
-            kActiveUser = user
-        }
-        else {
-            
-            setWindowToLogin()
-        }
+        
         
         Alamofire.Manager.sharedInstance.session.configuration.HTTPAdditionalHeaders = [
             "Accept-Encoding1": "deflate",
-            "Accept-Encoding": "deflate",
-            "ActiveUserID": kActiveUser.UserID
+            "Accept-Encoding": "deflate"
         ]
         
         //registerForLocalNotifications()
@@ -88,6 +80,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //setupGoogleMapApi()
         
         //parse
+        User.registerSubclass()
+        FriendRequest.registerSubclass()
         
         Parse.setApplicationId("d24X8b7STLrPskMNRBVgs30iI1G6cG1lGqsPqeMN",
             clientKey: "fR5DJfzy5x9qlYLiD4xfLd46GmAH1QCWhV1Q8SKc")
@@ -109,13 +103,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         
-        
-//        let userNotificationTypes = UIUserNotificationType.Alert | UIUserNotificationType.Badge | UIUserNotificationType.Sound
-//        let settings = UIUserNotificationSettings(forTypes: userNotificationTypes, categories: nil)
-//        application.registerUserNotificationSettings(settings)
-//        application.registerForRemoteNotifications()
-        
-        
+        if User.currentUser() == nil {
+            
+            setWindowToLogin()
+        }
         
         return true
     }
@@ -147,21 +138,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //UIApplication.sharedApplication().registerForRemoteNotifications()
     }
     
-//    func application(application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData) {
-//        
-//        Defaults["Device_Token"] = deviceToken
-//        println(deviceToken.base64String())
-//        
-//        Parse.
-//    }
-    
     func application(application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: NSData) {
+        
         let installation = PFInstallation.currentInstallation()
         installation.setDeviceTokenFromData(deviceToken)
-        installation.channels = ["x"]
-        installation.setObject(kActiveUser.UserID, forKey: kParseInstallationUserIDKey)
-        installation.saveInBackground()
+        installation.channels = []
         
+        if let user = User.currentUser() {
+            
+            installation.setObject(user, forKey: kParseInstallationUserKey)
+        }
+        
+        installation.saveInBackground()
         println(deviceToken)
     }
     
@@ -216,12 +204,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationWillEnterForeground(application: UIApplication) {
         // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
+        
+        application.applicationIconBadgeNumber = 0;
     }
 
     func applicationDidBecomeActive(application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
         
-        application.applicationIconBadgeNumber = 0;
+        
     }
 
     func applicationWillTerminate(application: UIApplication) {
