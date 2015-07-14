@@ -85,8 +85,16 @@ class FindFriendsViewController: BaseViewController {
                             matches.removeAtIndex(index)
                         }
                     }
+                    for friend in User.currentUser()!.friends {
+                        
+                        if friend.objectId == match.objectId {
+                            
+                            let index = find(matches, match)!
+                            matches.removeAtIndex(index)
+                        }
+                    }
                 }
-                
+
                 self.matches = matches
             }
             

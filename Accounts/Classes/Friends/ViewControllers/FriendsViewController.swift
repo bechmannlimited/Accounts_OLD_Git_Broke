@@ -18,8 +18,6 @@ private let kAnimationDuration:NSTimeInterval = 0.5
 private let kPopoverContentSize = CGSize(width: 320, height: 360)
 
 class FriendsViewController: ACBaseViewController {
-
-    var friends = [User]()
     
     var tableView = UITableView(frame: CGRectZero, style: UITableViewStyle.Grouped)
     
@@ -88,7 +86,7 @@ class FriendsViewController: ACBaseViewController {
         var emptyBarButtonItem = UIBarButtonItem(barButtonSystemItem: .FixedSpace, target: nil, action: nil)
         emptyBarButtonItem.width = 0
         
-        addBarButtonItem = friends.count > 0 ? UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "add") : emptyBarButtonItem
+        addBarButtonItem = User.currentUser()!.friends.count > 0 ? UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "add") : emptyBarButtonItem
         
         friendInvitesBarButtonItem = UIBarButtonItem(title: "Invites", style: .Plain, target: self, action: "friendInvites")
         openMenuBarButtonItem = UIBarButtonItem(image: kMenuIcon, style: .Plain, target: self, action: "openMenu")
@@ -128,7 +126,7 @@ class FriendsViewController: ACBaseViewController {
         var friendsWhoAreEven = Array<User>()
         
         //owes you money
-        for friend in friends {
+        for friend in User.currentUser()!.friends {
             
             if friend.localeDifferenceBetweenActiveUser < 0 {
                 
@@ -136,7 +134,7 @@ class FriendsViewController: ACBaseViewController {
             }
         }
         
-        for friend in friends {
+        for friend in User.currentUser()!.friends {
             
             if friend.localeDifferenceBetweenActiveUser > 0 {
                 
@@ -144,7 +142,7 @@ class FriendsViewController: ACBaseViewController {
             }
         }
         
-        for friend in friends {
+        for friend in User.currentUser()!.friends {
             
             if friend.localeDifferenceBetweenActiveUser == 0 {
                 
@@ -163,9 +161,7 @@ class FriendsViewController: ACBaseViewController {
     
     override func refresh(refreshControl: UIRefreshControl?) {
         
-        User.currentUser()?.relationForKey(kParse_User_Friends_Key).query()?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
-            
-            self.friends = objects as! [User]
+        User.currentUser()?.getFriends({ () -> () in
             
             refreshControl?.endRefreshing()
             self.tableView.reloadData()
@@ -209,9 +205,9 @@ class FriendsViewController: ACBaseViewController {
         
         UIView.animateWithDuration(kAnimationDuration, animations: { () -> Void in
             
-            self.noDataView.layer.opacity = self.friends.count > 0 ? 0 : 1
-            self.tableView.layer.opacity = self.friends.count > 0 ? 1 : 1
-            self.tableView.separatorColor = self.friends.count > 0 ? kDefaultSeperatorColor : .clearColor()
+            self.noDataView.layer.opacity = User.currentUser()!.friends.count > 0 ? 0 : 1
+            self.tableView.layer.opacity = User.currentUser()!.friends.count > 0 ? 1 : 1
+            self.tableView.separatorColor = User.currentUser()!.friends.count > 0 ? kDefaultSeperatorColor : .clearColor()
         })
     }
 }
@@ -320,10 +316,10 @@ extension FriendsViewController: UITableViewDelegate, UITableViewDataSource {
             
             if response == .Confirm {
                 
-                let index = find(self.friends, friend)!
+                let index = find(User.currentUser()!.friends, friend)!
                 
                 tableView.beginUpdates()
-                self.friends.removeAtIndex(index)
+                User.currentUser()!.friends.removeAtIndex(index)
                 tableView.deleteRowsAtIndexPaths([indexPath], withRowAnimation: UITableViewRowAnimation.Top)
                 tableView.endUpdates()
                 

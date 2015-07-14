@@ -10,7 +10,6 @@ import UIKit
 import ABToolKit
 import SwiftyUserDefaults
 import Alamofire
-
 import Parse
 import Bolts
 
@@ -54,34 +53,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
-//        let settings = CompresJSON.sharedInstance().settings
-//        
-//        settings.encryptionKey = "7e4bac048ef766e83f0ec8c079e1f90c2eb690a9"
-//        settings.shouldCompress = false
-//        settings.shouldEncrypt = false
-        
-        Session.sharedSession().domain = "http://alex.bechmann.co.uk/iou"
-        WebApiDefaults.sharedInstance().baseUrl = "\(Session.sharedSession().domain)/api"
-        
-        JSONMappingDefaults.sharedInstance().webApiSendDateFormat = DateFormat.ISO8601.rawValue
-        JSONMappingDefaults.sharedInstance().dateFormat = DateFormat.ISO8601.rawValue
-        
         setupAppearances()
-        
-        
-        
-        Alamofire.Manager.sharedInstance.session.configuration.HTTPAdditionalHeaders = [
-            "Accept-Encoding1": "deflate",
-            "Accept-Encoding": "deflate"
-        ]
-        
-        //registerForLocalNotifications()
-        
-        //setupGoogleMapApi()
         
         //parse
         User.registerSubclass()
         FriendRequest.registerSubclass()
+        
+        Parse.enableLocalDatastore()
         
         Parse.setApplicationId("d24X8b7STLrPskMNRBVgs30iI1G6cG1lGqsPqeMN",
             clientKey: "fR5DJfzy5x9qlYLiD4xfLd46GmAH1QCWhV1Q8SKc")
@@ -125,13 +103,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         //GMSServices.provideAPIKey("AIzaSyCwDKp9Ev7BLRdf_Y4iymmDz4-PsmVISiw")
     }
-    
-//    func registerForLocalNotifications() {
-//        
-//        var settings = UIUserNotificationSettings(forTypes: UIUserNotificationType.Alert | UIUserNotificationType.Badge | UIUserNotificationType.Sound, categories: ["NEW_PAYMENT"])
-//        
-//        UIApplication.sharedApplication().registerUserNotificationSettings(settings)
-//    }
     
     func application(application: UIApplication, didRegisterUserNotificationSettings notificationSettings: UIUserNotificationSettings) {
         

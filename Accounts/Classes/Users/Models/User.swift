@@ -29,48 +29,56 @@ class User: PFUser {
     }
     
     func removeFriend(friend:User, completion: (success: Bool) -> ()) {
+    
+        let friendRequest = FriendRequest()
+        friendRequest.fromUser = User.currentUser()
+        friendRequest.toUser = friend
+        friendRequest.friendRequestStatus = FriendRequestStatus.RequestingDeletion.rawValue
         
-        var relation = User.currentUser()?.relationForKey(kParse_User_Friends_Key)
+        friend.unpinInBackground()
         
-        relation?.query()?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
+        friendRequest.saveInBackgroundWithBlock { (success, error) -> Void in
             
-            if let error = error {
-                
-                completion(success: false)
-            }
-            else {
-                
-                relation?.removeObject(friend)
-                
-                //send deletion request to friend to remove on his end too
-                var deleteRequest = FriendRequest()
-                deleteRequest.fromUser = User.currentUser()!
-                deleteRequest.toUser = friend
-                deleteRequest.friendRequestStatus = FriendRequestStatus.RequestingDeletion.rawValue
-                
-                PFObject.saveAllInBackground([deleteRequest, self], block: { (success, error) -> Void in
-                    
-                    ParseUtilities.showAlertWithErrorIfExists(error)
-                    completion(success: success)
-                })
-            }
-        })
+            completion(success: success)
+        }
     }
     
     func getFriends(completion:() -> ()) {
 
         friends = [User]()
         
-        let friendsQuery = relationForKey(kParse_User_Friends_Key).query()
+        var didLoadFromNetwork = false
         
-        friendsQuery?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
+        var handleObjects: ([AnyObject]?) -> () = { objects in
             
-            if let arr = objects as? [User] {
+            if let friends = objects as? [User] {
                 
-                self.friends = arr
+                User.currentUser()?.friends = objects as! [User]
+                
+                if let arr = objects as? [User] {
+                    
+                    self.friends = arr
+                }
+                
+                self.pinInBackground()
+                completion()
             }
+        }
+        
+        User.currentUser()?.relationForKey(kParse_User_Friends_Key).query()?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
             
-            completion()
+            didLoadFromNetwork = true
+            handleObjects(objects)
+        })
+        
+        var onlineQuery = User.currentUser()?.relationForKey(kParse_User_Friends_Key).query()
+        onlineQuery?.fromLocalDatastore()
+        onlineQuery?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
+            
+            if !didLoadFromNetwork {
+                
+                handleObjects(objects)
+            }
         })
     }
     
@@ -88,9 +96,6 @@ class User: PFUser {
     }
     
     func addFriendFromRequest(friendRequest: FriendRequest, completion:(success: Bool) -> ()) {
-        
-        let relation = User.currentUser()!.relationForKey(kParse_User_Friends_Key)
-        relation.addObject(friendRequest.fromUser!)
         
         friendRequest.friendRequestStatus = FriendRequestStatus.Confirmed.rawValue
         
