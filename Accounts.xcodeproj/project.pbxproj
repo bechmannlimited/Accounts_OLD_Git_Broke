@@ -46,6 +46,7 @@
 		E442C3501B52BE030061CAE6 /* ParseKeys.swift in Sources */ = {isa = PBXBuildFile; fileRef = E442C34F1B52BE030061CAE6 /* ParseKeys.swift */; };
 		E442C3521B52C3150061CAE6 /* FriendRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E442C3511B52C3150061CAE6 /* FriendRequest.swift */; };
 		E47FD80E1B533B2E004B4C56 /* ParseUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = E47FD80D1B533B2E004B4C56 /* ParseUtilities.swift */; };
+		E47FD8121B5700AF004B4C56 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E47FD8111B5700AF004B4C56 /* Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -105,6 +106,7 @@
 		E442C3511B52C3150061CAE6 /* FriendRequest.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FriendRequest.swift; sourceTree = "<group>"; };
 		E47FD80A1B53176C004B4C56 /* Accounts-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Accounts-Bridging-Header.h"; sourceTree = "<group>"; };
 		E47FD80D1B533B2E004B4C56 /* ParseUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ParseUtilities.swift; sourceTree = "<group>"; };
+		E47FD8111B5700AF004B4C56 /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -355,6 +357,7 @@
 				E442C3101B510E940061CAE6 /* ViewControllers */,
 				E442C34F1B52BE030061CAE6 /* ParseKeys.swift */,
 				E47FD80D1B533B2E004B4C56 /* ParseUtilities.swift */,
+				E47FD8111B5700AF004B4C56 /* Extensions.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -642,6 +645,7 @@
 				E442C3521B52C3150061CAE6 /* FriendRequest.swift in Sources */,
 				E442C3361B510E940061CAE6 /* Friend.swift in Sources */,
 				E442C32C1B510E940061CAE6 /* LoginViewController.swift in Sources */,
+				E47FD8121B5700AF004B4C56 /* Extensions.swift in Sources */,
 				E442C32B1B510E940061CAE6 /* SelectUsersViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -66,23 +66,23 @@ class SelectUsersViewController: ACBaseViewController {
 
             if allowEditing {
                 
-                title = "Select friends"
+                title = "Select users"
                 navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Done, target: self, action: "done")
             }
             else {
                 
-                title = "Friends"
+                title = "Users"
             }
         }
         else {
             
             if allowEditing {
                 
-                title = "Select friend"
+                title = "Select user"
             }
             else {
                 
-                title = "Friend"
+                title = "User"
             }
         }
     }

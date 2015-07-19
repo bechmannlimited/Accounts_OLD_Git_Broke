@@ -9,6 +9,7 @@
 import UIKit
 import ABToolKit
 import SwiftyJSON
+import Parse
 
 private let kPurchaseImage = AppTools.iconAssetNamed("1007-price-tag-toolbar.png")
 private let kTransactionImage = AppTools.iconAssetNamed("922-suitcase-toolbar.png")
@@ -37,15 +38,18 @@ class TransactionsViewController: ACBaseViewController {
     var loadMoreView = UIView()
     var loadMoreViewHeightConstraint: NSLayoutConstraint?
     var hasLoadedFirstTime = false
-    var loadMoreRequest: JsonRequest?
+
     var isLoadingMore = false
     var canLoadMore = true
     
     var selectedRow: NSIndexPath?
     
-    var selectedPurchaseID: Int?
-    var selectedTransactionID: Int?
+    var selectedPurchaseID: String?
+    var selectedTransactionID: String?
     var didJustDelete: Bool = false
+    
+    var refreshQuery: PFQuery?
+    var loadMoreQuery: PFQuery?
     
     var popoverViewController: UIViewController?
     
@@ -58,7 +62,7 @@ class TransactionsViewController: ACBaseViewController {
         }
         
         setupTableView(tableView, delegate: self, dataSource: self)
-        title = "Transactions with \(friend.username)"
+        title = "Transactions with \(friend.username!)"
         
         addBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "add")
         navigationItem.rightBarButtonItem = addBarButtonItem
@@ -87,6 +91,7 @@ class TransactionsViewController: ACBaseViewController {
     }
     
     func getDifferenceAndRefreshIfNeccessary(refreshControl: UIRefreshControl?) {
+        
         
 //        kActiveUser.getDifferenceBetweenFriend(friend, completion: { (difference, count) -> () in
 //         
@@ -130,29 +135,33 @@ class TransactionsViewController: ACBaseViewController {
             tableView.layer.opacity = 0
             noDataView.layer.opacity = 0
         }
+    
         
-        refreshRequest?.cancel()
-//        refreshRequest = kActiveUser.getTransactionsBetweenFriend(friend, skip: 0, take: take, completion: { (transactions) -> () in
-//            
-//            self.transactions = transactions
-//            self.hasLoadedFirstTime = true
-//            
-//        }).onDownloadFinished({ () -> () in
-//            
-//            refreshControl?.endRefreshing()
-//            self.tableView.reloadData()
-//            
-//            self.view.hideLoader()
-//            self.showOrHideTableOrNoDataView()
-//            
-//            //just in case
-//            self.loadMoreView.hideLoader()
-//            
-//            self.findAndScrollToCalculatedSelectedCellAtIndexPath()
-//            
-//            completion?()
-//        })
+        refreshQuery?.cancel()
+        refreshQuery = Transaction.query()
+        refreshQuery?.includeKey("purchase")
+        refreshQuery?.whereKey("fromUser", equalTo: User.currentUser()!)
+        refreshQuery?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
+            
+            if let transactions = objects as? [Transaction] {
+                
+                self.transactions = transactions
+                self.hasLoadedFirstTime = true
+            }
+            
+            refreshControl?.endRefreshing()
+            self.tableView.reloadData()
 
+            self.view.hideLoader()
+            self.showOrHideTableOrNoDataView()
+
+            //just in case
+            self.loadMoreView.hideLoader()
+
+            self.findAndScrollToCalculatedSelectedCellAtIndexPath()
+            
+            completion?()
+        })
     }
     
     func findAndScrollToCalculatedSelectedCellAtIndexPath() {
@@ -167,7 +176,7 @@ class TransactionsViewController: ACBaseViewController {
                 
                 if let purchaseID = selectedPurchaseID {
                     
-                    if transaction.purchase.PurchaseID == purchaseID && purchaseID > 0 {
+                    if transaction.purchase.objectId == purchaseID {
                         
                         calculatedIndexPath = NSIndexPath(forRow: row, inSection: 0)
                         break
@@ -175,7 +184,7 @@ class TransactionsViewController: ACBaseViewController {
                 }
                 if let transactionID = selectedTransactionID {
                     
-                    if transaction.TransactionID == transactionID && transactionID > 0 {
+                    if transaction.objectId == transactionID {
                         
                         calculatedIndexPath = NSIndexPath(forRow: row, inSection: 0)
                         break
@@ -189,7 +198,7 @@ class TransactionsViewController: ACBaseViewController {
                 
                 rowToDeselect = indexPath
             }
-            else if selectedPurchaseID == 0 && selectedTransactionID == 0 {
+            else if selectedPurchaseID == nil && selectedTransactionID == nil {
                 
                 rowToDeselect = nil // for now (needsto get id from postback)
                 
@@ -270,35 +279,43 @@ class TransactionsViewController: ACBaseViewController {
     
     func loadMore() {
         
-//        if !isLoadingMore && canLoadMore && hasLoadedFirstTime {
-//            
-//            isLoadingMore = true
-//            canLoadMore = false
-//            
-//            animateTableFooterViewHeight(kLoaderTableFooterViewHeight, completion: nil)
-//            
-//            loadMoreView.showLoader()
-//            
-//            loadMoreRequest = kActiveUser.getTransactionsBetweenFriend(friend, skip: transactions.count, take: nil, completion: { (transactions) -> () in
-//                
-//                for transaction in transactions {
-//                    
-//                    self.transactions.append(transaction)
-//                }
-//                
-//            }).onDownloadFinished({ () -> () in
-//                
-//                self.tableView.reloadData()
-//                self.isLoadingMore = false
-//                self.loadMoreView.hideLoader()
-//                
-//                NSTimer.schedule(delay: 0.2, handler: { timer in
-//                    
-//                    self.animateTableFooterViewHeight(0, completion: { () -> () in
-//                    })
-//                })
-//            })
-//        }
+        if !isLoadingMore && canLoadMore && hasLoadedFirstTime {
+            
+            isLoadingMore = true
+            canLoadMore = false
+            
+            animateTableFooterViewHeight(kLoaderTableFooterViewHeight, completion: nil)
+            
+            loadMoreView.showLoader()
+            
+            loadMoreQuery?.cancel()
+            loadMoreQuery = Transaction.query()
+            loadMoreQuery?.whereKey("fromUser", equalTo: User.currentUser()!)
+            loadMoreQuery?.skip = transactions.count
+            loadMoreQuery?.limit = 16
+            loadMoreQuery?.includeKey("purchase")
+            
+            loadMoreQuery?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
+                
+                if let transactions = objects as? [Transaction] {
+                    
+                    for transaction in transactions {
+                        
+                        self.transactions.append(transaction)
+                    }
+                }
+                
+                self.tableView.reloadData()
+                self.isLoadingMore = false
+                self.loadMoreView.hideLoader()
+                
+                NSTimer.schedule(delay: 0.2, handler: { timer in
+                    
+                    self.animateTableFooterViewHeight(0, completion: { () -> () in
+                    })
+                })
+            })
+        }
     }
     
     func add() {
@@ -340,7 +357,7 @@ class TransactionsViewController: ACBaseViewController {
     override func viewWillDisappear(animated: Bool) {
         super.viewWillDisappear(animated)
         
-        loadMoreRequest?.cancel()
+        loadMoreQuery?.cancel()
     }
 }
 
@@ -369,12 +386,12 @@ extension TransactionsViewController: UITableViewDelegate, UITableViewDataSource
         
         var amount = transaction.localeAmount
         
-        if transaction.purchase.PurchaseID > 0 {
+        if transaction.purchase.objectId != nil {
 
             amount = transaction.purchase.localeAmount
             
-            let dateString:String = transaction.purchase.DatePurchased.toString(DateFormat.Date.rawValue)
-            cell.textLabel?.text = "\(transaction.purchase.Description)"
+            let dateString:String = transaction.purchase.purchasedDate!.toString(DateFormat.Date.rawValue)
+            cell.textLabel?.text = "\(transaction.purchase.title)"
             
 //            if transaction.purchase.user.UserID == kActiveUser.UserID {
 //                
@@ -392,8 +409,8 @@ extension TransactionsViewController: UITableViewDelegate, UITableViewDataSource
         }
         else {
             
-            let dateString:String = transaction.TransactionDate.toString(DateFormat.Date.rawValue)
-            cell.textLabel?.text = "\(transaction.Description)"
+            let dateString:String = transaction.transactionDate.toString(DateFormat.Date.rawValue)
+            cell.textLabel?.text = "\(transaction.title)"
             
 //            if transaction.user.UserID == kActiveUser.UserID {
 //                
@@ -422,7 +439,7 @@ extension TransactionsViewController: UITableViewDelegate, UITableViewDataSource
         let transaction = transactions[indexPath.row]
         let cell = tableView.cellForRowAtIndexPath(indexPath)!
         
-        if transaction.purchase.PurchaseID > 0 {
+        if transaction.purchase.objectId != nil {
             
             let v = SavePurchaseViewController()
             v.purchase = transaction.purchase
@@ -566,15 +583,15 @@ extension TransactionsViewController: SaveItemDelegate {
     
     func transactionDidChange(transaction: Transaction) {
         
-        selectedPurchaseID = 0
-        selectedTransactionID = transaction.TransactionID
+        selectedPurchaseID = nil
+        selectedTransactionID = transaction.objectId
         selectedRow = nil
     }
     
     func purchaseDidChange(purchase: Purchase) {
         
-        selectedTransactionID = 0
-        selectedPurchaseID = purchase.PurchaseID
+        selectedTransactionID = nil
+        selectedPurchaseID = purchase.objectId
         selectedRow = nil
     }
     

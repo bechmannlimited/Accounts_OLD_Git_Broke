@@ -14,10 +14,13 @@ import Parse
 
 class Transaction: PFObject {
    
-    var TransactionID: Int = 0
-    var user: User?
-    var friend: User?
-    var Amount: Double = 0
+    @NSManaged var fromUser: User?
+    @NSManaged var toUser: User?
+    @NSManaged var amount: Double
+    //@NSManaged var transactionDescription: String
+    @NSManaged var title: String
+    @NSManaged var purchase: Purchase
+    @NSManaged var transactionDate: NSDate
     
     var localeAmount: Double {
         
@@ -27,11 +30,11 @@ class Transaction: PFObject {
             
             if currencyIdentifier == "DKK" {
                 
-                return self.Amount * 10
+                return self.amount * 10
             }
             else {
                 
-                return self.Amount
+                return self.amount
             }
         }
         
@@ -41,41 +44,37 @@ class Transaction: PFObject {
             
             if currencyIdentifier == "DKK" {
                 
-                self.Amount = newValue / 10
+                self.amount = newValue / 10
             }
             else {
                 
-                self.Amount = newValue
+                self.amount = newValue
             }
         }
     }
-    
-    var Description = ""
-    var purchase = Purchase()
-    var TransactionDate:NSDate = NSDate()
     
     func modelIsValid() -> Bool {
 
         var errors:Array<String> = []
 
-        if user == nil {
+        if fromUser == nil {
 
             errors.append("User not set")
         }
 
-        if friend == nil {
+        if toUser == nil {
 
             errors.append("This transaction isnt going to anyone!")
         }
 
-        if Amount == 0 {
+        if amount == 0 {
 
             errors.append("The amount is 0")
         }
 
-        if Description == "" {
+        if String.emptyIfNull(title) == "" {
 
-            errors.append("Description is empty")
+            errors.append("title is empty")
         }
 
         var c = 1
@@ -95,73 +94,16 @@ class Transaction: PFObject {
         
         return errors.count == 0
     }
-
-
 }
+
+extension Transaction: PFSubclassing {
     
-//    override func registerClassesForJsonMapping() {
-//        
-//        //registerClass(User.self, propertyKey: "user", jsonKey: "User")
-//        //registerClass(User.self, propertyKey: "friend", jsonKey: "User1")
-//        //registerClass(Purchase.self, propertyKey: "purchase", jsonKey: "Purchase")
-//        registerDate("TransactionDate")
-//        registerDate("DateEntered")
-//    }
-//    
-//    override func setExtraPropertiesFromJSON(json: JSON) {
-//       
-//        user = User.createObjectFromJson(json["User"])
-//        friend = User.createObjectFromJson(json["User1"])
-//        purchase = Purchase.createObjectFromJson(json["Purchase"])
-//    }
-//    
-//    override func webApiRestObjectID() -> Int? {
-//        
-//        return TransactionID
-//    }
-//    
-//    override func modelIsValid() -> Bool {
-//        
-//        var errors:Array<String> = []
-//        
-//        if user.UserID == 0 {
-//            
-//            errors.append("User not set")
-//        }
-//        
-//        if friend.UserID == 0 {
-//            
-//            errors.append("This transaction isnt going to anyone!")
-//        }
-//        
-//        if Amount == 0 {
-//            
-//            errors.append("The amount is 0")
-//        }
-//        
-//        if Description == "" {
-//            
-//            errors.append("Description is empty")
-//        }
-//        
-//        var c = 1
-//        var errorMessageString = ""
-//        
-//        for error in errors {
-//            
-//            let suffix = c == errors.count ? "" : ", "
-//            errorMessageString += "\(error)\(suffix)"
-//            c++
-//        }
-//        
-//        if errors.count > 0 {
-//            
-//            //UIAlertView(title: "Transaction not saved!", message: errorMessageString, delegate: nil, cancelButtonTitle: "OK").show()
-//        }
-//        
-//        return errors.count == 0
-//    }
-//    
+    static func parseClassName() -> String {
+        return Transaction.getClassName()
+    }
+}
+
+//
 //    func save() -> JsonRequest? {
 //        
 //        if !modelIsValid() {

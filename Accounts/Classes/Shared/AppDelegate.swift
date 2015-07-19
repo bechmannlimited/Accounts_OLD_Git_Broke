@@ -13,7 +13,7 @@ import Alamofire
 import Parse
 import Bolts
 
-var kActiveUser:User = User.object()
+//var kActiveUser:User = User.object()
 let kDevice = UIDevice.currentDevice().userInterfaceIdiom
 
 let kViewBackgroundColor = UIColor.groupTableViewBackgroundColor()
@@ -58,6 +58,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //parse
         User.registerSubclass()
         FriendRequest.registerSubclass()
+        Transaction.registerSubclass()
+        Purchase.registerSubclass()
         
         Parse.enableLocalDatastore()
         

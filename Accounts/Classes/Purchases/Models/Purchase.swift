@@ -10,12 +10,21 @@ import UIKit
 import ABToolKit
 import Alamofire
 import SwiftyJSON
+import Parse
 
-class Purchase: JSONObject {
-   
-    var PurchaseID: Int = 0
-    var friends: [User] = []
-    var Amount: Double = 0
+class Purchase: PFObject {
+
+    @NSManaged var amount: Double
+    //@NSManaged var purchaseDescription: String?
+    @NSManaged var title: String
+    @NSManaged var user: User
+    @NSManaged var purchasedDate:NSDate?
+    
+    var transactions: Array<Transaction> = []
+    //var friends: [User] = []
+    //var billSplitDictionary = Dictionary<User, Double>()
+    
+    var originalTransactions = Array<Transaction>()
     
     var localeAmount: Double {
         
@@ -25,11 +34,11 @@ class Purchase: JSONObject {
             
             if currencyIdentifier == "DKK" {
                 
-                return self.Amount * 10
+                return self.amount * 10
             }
             else {
                 
-                return self.Amount
+                return self.amount
             }
         }
         
@@ -39,179 +48,187 @@ class Purchase: JSONObject {
             
             if currencyIdentifier == "DKK" {
                 
-                self.Amount = newValue / 10
+                self.amount = newValue / 10
             }
             else {
                 
-                self.Amount = newValue
+                self.amount = newValue
             }
         }
     }
     
-    var Description = ""
-    var user = User()
-    var billSplitDictionary = Dictionary<User, Double>()
-    var DatePurchased:NSDate = NSDate()
-    var DateEntered: NSDate = NSDate()
-    //var transactions = Array<Transaction>()
-    
-    override func registerClassesForJsonMapping() {
-        
-        registerDate("DatePurchased")
-        registerDate("DateEntered")
-        registerClass(Transaction.self, propertyKey: "transactions", jsonKey: "Transactions")
-        //registerClass(User.self, propertyKey: "user", jsonKey: "User")
-        //registerClass(User.self, propertyKey: "friends", jsonKey: "RelationUsers")
-    }
-    
-//    override func setExtraPropertiesFromJSON(json: JSON) {
+//    func generateTransactionsFromBillSplitDictionary(completion:() -> ()) {
 //        
-//        user.UserID = json["UserID"].intValue
-//        
-//        //friends = User.convertJsonToMultipleObjects(User.self, json: json["RelationUsers"])
-//        
-//        user = User.createObjectFromJson(json["User"])
-//        
-//        for (key: String, subJson: JSON) in json["RelationUserAmounts"] {
-//            
-//            let amount = subJson["Amount"].doubleValue
-//            let friend:User = User.createObjectFromJson(subJson["User"])
-//            
-//            if friend.UserID == user.UserID {
-//                
-//                billSplitDictionary[user] = amount
-//            }
-//            else {
-//                
-//                friends.append(friend)
-//                billSplitDictionary[friend] = amount
-//            }
-//        }
-//    }
-    
-    func save() -> JsonRequest? {
-        
-//        if !modelIsValid() {
-//            
-//            return nil
-//        }
-//
-//        var urlString = ""
-//        let httpMethod: Alamofire.Method = PurchaseID == 0 ? .POST : .PUT
-//        
-//        if PurchaseID > 0 {
-//            
-//            urlString = Purchase.webApiUrls().updateUrl(PurchaseID)!
-//        }
-//        else {
-//            
-//            urlString = Purchase.webApiUrls().insertUrl()!
-//        }
+//        transactions = []
 //        
 //        var c = 0
-//        
 //        var friendsToInclude = friends
 //        friendsToInclude.append(user)
 //        
-//        for user in friendsToInclude {
-//            
-//            let amount = billSplitDictionary[user]!
-//            
-//            let prefix = c == 0 ? "?" : "&"
-//            urlString = urlString + "\(prefix)RelationUserIDs=\(user.UserID)&RelationUserAmounts=\(amount)"
-//            c++
-//        }
+////        relationForKey("transactions").query()?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
+////            
+////            ParseUtilities.showAlertWithErrorIfExists(error)
+////            
+////            if let transactions = objects as? [Transaction] {
+////                
+////                for transaction: Transaction in transactions {
+////                    
+////                    //see if a transaction
+////                    
+////                    
+////                    
+////                    
+////                    self.relationForKey("transactions").removeObject(transaction)
+////                }
+////            }
 //        
-//        //let prefix = urlString.contains("?") ? "&" : "?"
-//        //urlString += "\(prefix)activeUserID=\(kActiveUser.UserID)"
-//    
-//        var params = convertToDictionary(["Description", "Amount", "PurchaseID"], includeNestedProperties: false)
-//        params["UserID"] = user.UserID
-//        params["DateEntered"] = DateEntered.toString(JSONMappingDefaults.sharedInstance().webApiSendDateFormat)
-//        params["DatePurchased"] = DatePurchased.toString(JSONMappingDefaults.sharedInstance().webApiSendDateFormat)
-//
-//        println(urlString)
-//        println(params)
-//        println(Alamofire.Manager.sharedInstance.session.configuration.HTTPAdditionalHeaders)
+//            //self.saveInBackground()
+//            
+////            for user in friendsToInclude {
+////                
+////                let transaction = Transaction()
+////                transaction.fromUser = self.user
+////                transaction.toUser = user
+////                transaction.amount = self.billSplitDictionary[user]!
+////                transaction.transactionDate = self.purchasedDate!
+////                self.transactions.append(transaction)
+////            }
+//            
+//           // completion()
+//        //})
 //        
-//        return JsonRequest.create(urlString, parameters: params, method: httpMethod).onDownloadSuccessWithRequestInfo({ (json, request, httpUrlRequest, httpUrlResponse) -> () in
-//
-//            println(httpUrlResponse?.statusCode)
-//            println(json)
-//            
-//            if httpUrlResponse?.statusCode == 200 || httpUrlResponse?.statusCode == 201 || httpUrlResponse?.statusCode == 204 {
-//                
-//                request.succeedContext()
-//            }
-//            else {
-//                
-//                request.failContext()
-//            }
-//            
-//        })
+//        
+//    }
+    
+    func savePurchase(completion: (success:Bool) -> ()) {
         
-        return nil // temp
+        if !modelIsValid() {
+            
+            completion(success: false)
+        }
+        
+        var savePurchase: () -> () = {
+            
+            for transaction in self.transactions {
+                
+                //again
+                transaction.purchase = self
+                transaction.transactionDate = self.purchasedDate!
+                
+                self.relationForKey(kParse_Purchase_TransactionsRelation_Key).addObject(transaction)
+            }
+            
+            self.saveInBackgroundWithBlock({ (success, error) -> Void in
+                
+                ParseUtilities.showAlertWithErrorIfExists(error)
+                completion(success: success)
+            })
+        }
+        
+        var newTransactions = [Transaction]()
+        
+        for transaction in self.transactions {
+            
+            let newTransaction = Transaction()
+            newTransaction.title = self.title
+            newTransaction.fromUser = transaction.fromUser
+            newTransaction.toUser = transaction.toUser
+            newTransaction.amount = transaction.amount
+            newTransaction.purchase = transaction.purchase
+            newTransaction.transactionDate = transaction.transactionDate
+            
+            newTransactions.append(transaction)
+        }
+        
+        // delete all previous ones
+        
+        for transaction in originalTransactions {
+            
+            if !contains(transactions, transaction){
+                
+                transaction.deleteEventually()
+            }
+        }
+        
+        transactions = newTransactions
+        
+        PFObject.saveAllInBackground(transactions, block: { (success, error) -> Void in
+            
+            if success {
+                
+                savePurchase()
+            }
+            else {
+                
+                ParseUtilities.showAlertWithErrorIfExists(error)
+                completion(success: success)
+            }
+        })
     }
     
     func splitTheBill() {
         
-        self.billSplitDictionary = Dictionary<User, Double>()
-        var amount:Double = self.Amount / Double(self.friends.count + 1)
+        let splitAmount = self.amount / Double(self.transactions.count)
         
-        for friend in self.friends {
+        for transaction in transactions {
             
-            billSplitDictionary[friend] = amount
+            transaction.amount = splitAmount
         }
         
-        billSplitDictionary[user] = amount
+//        self.billSplitDictionary = Dictionary<User, Double>()
+//        var amount:Double = self.amount / Double(self.friends.count + 1)
+//        
+//        for friend in self.friends {
+//            
+//            billSplitDictionary[friend] = amount
+//        }
+//        
+//        billSplitDictionary[user] = amount
     }
     
-    override func webApiRestObjectID() -> Int? {
-        
-        return PurchaseID
-    }
+
     
-    override func modelIsValid() -> Bool {
+    func modelIsValid() -> Bool {
 
         var errors:Array<String> = []
         
-        if Amount == 0 {
+        if amount == 0 {
          
             errors.append("Amount is 0")
         }
         
-        if friends.count == 0 {
+        if transactions.count < 2 {
             
             errors.append("You havnt split this with anyone!")
         }
         
-        if Description == "" {
+        if String.emptyIfNull(title) == "" {
             
-            errors.append("Description is empty")
+            errors.append("title is empty")
         }
         
-        for friend in friends {
-            
-            if billSplitDictionary[friend] == nil || billSplitDictionary[friend] == 0 {
-                
-                errors.append("\(friend.username) hasn't got an amount associated")
-            }
-        }
+//        for friend in friends {
+//            
+//            if billSplitDictionary[friend] == nil || billSplitDictionary[friend] == 0 {
+//                
+//                errors.append("\(friend.username) hasn't got an amount associated")
+//            }
+//        }
         
         var friendTotals:Double = 0
         
-        for friend in friends {
-            
-            if let amount = billSplitDictionary[friend] {
-                
-                friendTotals += amount
-            }
-        }
-        
-        if friendTotals > Amount {
-            
-            errors.append("The amounts for the users don't add up to the total")
-        }
+//        for friend in friends {
+//            
+//            if let amount = billSplitDictionary[friend] {
+//                
+//                friendTotals += amount
+//            }
+//        }
+//        
+//        if friendTotals > amount {
+//            
+//            errors.append("The amounts for the users don't add up to the total")
+//        }
         
         var c = 1
         var errorMessageString = ""
@@ -230,30 +247,79 @@ class Purchase: JSONObject {
         
         return errors.count > 0 ? false : true
     }
+//    
+//    func calculateTotalFromBillSplitDictionary() {
+//        
+//        var total:Double = 0
+//        
+//        for friend in friends {
+//            
+//            if let amount = billSplitDictionary[friend] {
+//                
+//                total += amount
+//            }
+//        }
+//        
+//        if let userTotal = billSplitDictionary[user] {
+//            
+//            total += userTotal
+//        }
+//
+//        amount = total
+//    }
     
-    func calculateTotalFromBillSplitDictionary() {
+    func calculateTotalFromTransactions() {
         
-        var total:Double = 0
+        amount = 0
         
-        for friend in friends {
+        for transaction in transactions {
             
-            if let amount = billSplitDictionary[friend] {
+            amount += transaction.amount
+        }
+    }
+    
+    func transactionForToUser(toUser: User) -> Transaction? {
+        
+        for transaction in transactions {
+            
+            if transaction.toUser == toUser {
                 
-                total += amount
+                return transaction
             }
         }
         
-        if let userTotal = billSplitDictionary[user] {
-            
-            total += userTotal
-        }
-
-        Amount = total
+        return nil
     }
     
-//    func amountPaidByUser() -> Double {
-//        
-//        return purchase.Amount - calculateTotalFromBillSplitDictionary()
-//    }
+    func usersInTransactions() -> Array<User> {
+        
+        var users = Array<User>()
+        
+        for transaction in transactions {
+            
+            users.append(transaction.toUser!)
+        }
+        
+        return users
+    }
     
+    func removeTransactionForToUser(toUser: User) {
+        
+        for transaction in transactions {
+            
+            if transaction.toUser == toUser {
+                
+                let index = find(transactions, transaction)!
+                transactions.removeAtIndex(index)
+            }
+        }
+    }
+    
+}
+
+extension Purchase: PFSubclassing {
+    
+    static func parseClassName() -> String {
+        return Purchase.getClassName()
+    }
 }

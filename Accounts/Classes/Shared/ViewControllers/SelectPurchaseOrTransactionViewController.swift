@@ -88,8 +88,11 @@ extension SelectPurchaseOrTransactionViewController: UITableViewDelegate, UITabl
             
             if let friend = contextualFriend {
                 
-                v.purchase.friends.append(friend)
-                v.purchase.billSplitDictionary[friend] = 0
+                let transaction = Transaction()
+                transaction.fromUser = User.currentUser()
+                transaction.toUser = friend
+
+                v.purchase.transactions.append(transaction)
             }
             
             v.delegate = saveItemDelegate
@@ -103,7 +106,7 @@ extension SelectPurchaseOrTransactionViewController: UITableViewDelegate, UITabl
             
             if let friend = contextualFriend {
                 
-                v.transaction.friend = friend
+                v.transaction.toUser = friend
             }
             
             v.delegate = saveItemDelegate

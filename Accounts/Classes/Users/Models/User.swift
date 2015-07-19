@@ -59,8 +59,7 @@ class User: PFUser {
                     
                     self.friends = arr
                 }
-                
-                self.pinInBackground()
+
                 completion()
             }
         }
@@ -68,6 +67,7 @@ class User: PFUser {
         User.currentUser()?.relationForKey(kParse_User_Friends_Key).query()?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
             
             didLoadFromNetwork = true
+            self.pinInBackground()
             handleObjects(objects)
         })
         
@@ -138,6 +138,35 @@ class User: PFUser {
             
             completion(invites: self.allInvites)
         })
+    }
+    
+    class func userListExcludingID(id: String?) -> Array<User> {
+
+        var usersToChooseFrom = [User]()
+        var allUsersInContext = [User]()
+
+        for friend in User.currentUser()!.friends {
+
+            allUsersInContext.append(friend)
+        }
+        allUsersInContext.append(User.currentUser()!)
+
+        for user in allUsersInContext {
+
+            if let excludeID = id {
+
+                if user.objectId != excludeID {
+
+                    usersToChooseFrom.append(user)
+                }
+            }
+            else {
+
+                usersToChooseFrom.append(user)
+            }
+        }
+
+        return usersToChooseFrom
     }
 }
 

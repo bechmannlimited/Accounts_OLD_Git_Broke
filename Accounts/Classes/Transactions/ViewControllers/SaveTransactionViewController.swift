@@ -21,21 +21,22 @@ class SaveTransactionViewController: ACFormViewController {
     var isSaving = false
     
     override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        if transaction.TransactionID == 0 {
 
-            transaction.user = kActiveUser
+        if transaction.objectId == nil {
+
+            transaction.fromUser = User.currentUser()
+            transaction.transactionDate = NSDate()
+            transaction.title = ""
         }
 
         allowEditing = true // transaction.TransactionID == 0 || transaction.user.UserID == kActiveUser.UserID
         
-        if allowEditing && transaction.TransactionID == 0 {
+        if allowEditing && transaction.objectId == nil {
             
             title = "New transfer"
-            transaction.user = kActiveUser
+            //transaction.user = kActiveUser
         }
-        else if allowEditing && transaction.TransactionID > 0 {
+        else if allowEditing && transaction.objectId != nil {
             
             title = "Edit transfer"
         }
@@ -47,6 +48,8 @@ class SaveTransactionViewController: ACFormViewController {
         showOrHideSaveButton()
         
         navigationItem.leftBarButtonItem = UIBarButtonItem(title: "Cancel", style: UIBarButtonItemStyle.Plain, target: self, action: "pop")
+        
+        super.viewDidLoad()
     }
     
     func save() {
@@ -54,35 +57,32 @@ class SaveTransactionViewController: ACFormViewController {
         isSaving = true
         showOrHideSaveButton()
         
-//        transaction.save()?.onDownloadSuccessWithRequestInfo({ (json, request, httpUrlRequest, httpUrlResponse) -> () in
-//            
-//            if httpUrlResponse?.statusCode == 200 || httpUrlResponse?.statusCode == 201 || httpUrlResponse?.statusCode == 204 {
-//                
-//                self.transaction.TransactionID = json["TransactionID"].intValue
-//                self.delegate?.transactionDidChange(self.transaction)
-//                
-//                self.navigationController?.dismissViewControllerAnimated(true, completion: nil)
-//                self.navigationController?.popoverPresentationController?.delegate?.popoverPresentationControllerDidDismissPopover?(self.navigationController!.popoverPresentationController!)
-//                
-//                self.delegate?.itemDidChange()
-//            }
-//            else {
-//                
-//                UIAlertView(title: "Error", message: "Transaction not saved!", delegate: nil, cancelButtonTitle: "OK").show()
-//            }
-//            
-//        }).onDownloadFinished({ () -> () in
-//            
-//            self.isSaving = false
-//            self.showOrHideSaveButton()
-//        })
+        transaction.saveEventually { (success, error) -> Void in
+
+            if success {
+
+                self.delegate?.transactionDidChange(self.transaction)
+
+                self.navigationController?.dismissViewControllerAnimated(true, completion: nil)
+                self.navigationController?.popoverPresentationController?.delegate?.popoverPresentationControllerDidDismissPopover?(self.navigationController!.popoverPresentationController!)
+                
+                self.delegate?.itemDidChange()
+            }
+            else {
+                
+                ParseUtilities.showAlertWithErrorIfExists(error)
+            }
+
+            self.isSaving = false
+            self.showOrHideSaveButton()
+        }
     }
     
     func pop() {
         
         if itemDidChange {
             
-            UIAlertController.showAlertControllerWithButtonTitle("Cancel?", confirmBtnStyle: UIAlertActionStyle.Destructive, message: "Going back will delete changes to this transaction! Are you sure?") { (response) -> () in
+            UIAlertController.showAlertControllerWithButtonTitle("Go back", confirmBtnStyle: UIAlertActionStyle.Destructive, message: "Going back will delete changes to this transaction! Are you sure?") { (response) -> () in
                 
                 if response == AlertResponse.Confirm {
                     
@@ -97,8 +97,6 @@ class SaveTransactionViewController: ACFormViewController {
             self.dismissViewControllerFromCurrentContextAnimated(true)
             navigationController?.popoverPresentationController?.delegate?.popoverPresentationControllerDidDismissPopover?(navigationController!.popoverPresentationController!)
         }
-        
-        
     }
     
     func popAll() {
@@ -142,17 +140,17 @@ extension SaveTransactionViewController: FormViewDelegate {
         
         var sections = Array<Array<FormViewConfiguration>>()
         sections.append([
-            FormViewConfiguration.textField("Description", value: transaction.Description, identifier: "Description"),
+            FormViewConfiguration.textField("Title", value: String.emptyIfNull(transaction.title), identifier: "Title"),
             FormViewConfiguration.textFieldCurrency("Amount", value: Formatter.formatCurrencyAsString(transaction.localeAmount), identifier: "Amount", locale: locale)
         ])
         
         sections.append([
             FormViewConfiguration.normalCell("User"),
             FormViewConfiguration.normalCell("Friend"),
-            FormViewConfiguration.datePicker("Transaction date", date: transaction.TransactionDate, identifier: "TransactionDate", format: nil)
+            FormViewConfiguration.datePicker("Transaction date", date: transaction.transactionDate, identifier: "TransactionDate", format: nil)
         ])
         
-        if transaction.TransactionID > 0 {
+        if transaction.objectId != nil {
             
             sections.append([
                 FormViewConfiguration.button("Delete", buttonTextColor: kFormDeleteButtonTextColor, identifier: "Delete")
@@ -172,7 +170,7 @@ extension SaveTransactionViewController: FormViewDelegate {
         if identifier == "Friend" {
             
             cell.textLabel?.text = "Transfer to"
-            cell.detailTextLabel?.text = "\(transaction.friend?.username)"
+            cell.detailTextLabel?.text = "\(transaction.toUser!.username!)"
             cell.accessoryType = UITableViewCellAccessoryType.DisclosureIndicator
             
             return cell
@@ -181,7 +179,7 @@ extension SaveTransactionViewController: FormViewDelegate {
         if identifier == "User" {
             
             cell.textLabel?.text = "Transfer from"
-            cell.detailTextLabel?.text = "\(transaction.user?.username)"
+            cell.detailTextLabel?.text = "\(transaction.fromUser!.username!)"
             cell.accessoryType = UITableViewCellAccessoryType.DisclosureIndicator
             
             return cell
@@ -195,15 +193,15 @@ extension SaveTransactionViewController: FormViewDelegate {
         
         if identifier == "TransactionDate" {
             
-            transaction.TransactionDate = date
+            transaction.transactionDate = date
         }
     }
     
     func formViewTextFieldEditingChanged(identifier: String, text: String) {
         
-        if identifier == "Description" {
+        if identifier == "Title" {
 
-            transaction.Description = text
+            transaction.title = text
         }
     }
     
@@ -288,12 +286,12 @@ extension SaveTransactionViewController: SelectUserDelegate {
         
         if identifier == "Friend" {
             
-            transaction.friend = user
+            transaction.toUser = user
         }
         if identifier == "User" {
         
-            transaction.user = user
-            transaction.friend = User()
+            transaction.fromUser = user
+            transaction.toUser = nil
         }
         
         itemDidChange = true
