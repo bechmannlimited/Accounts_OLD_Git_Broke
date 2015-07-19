@@ -74,12 +74,18 @@ class SavePurchaseViewController: ACFormViewController {
                 
                 self.purchase.transactions = transactions
                 self.purchase.originalTransactions = transactions
+                
+                self.tableView.hidden = false
+                self.view.hideLoader()
+                self.showOrHideSaveButton()
+                self.reloadForm()
+            }
+            else {
+                
+                self.dismissViewControllerFromCurrentContextAnimated(true)
+                self.navigationController?.popoverPresentationController?.delegate?.popoverPresentationControllerDidDismissPopover?(self.navigationController!.popoverPresentationController!)
             }
             
-            self.tableView.hidden = false
-            self.view.hideLoader()
-            self.showOrHideSaveButton()
-            self.reloadForm()
         })
     }
     
@@ -214,13 +220,7 @@ extension SavePurchaseViewController: FormViewDelegate {
         for transaction in self.purchase.transactions {
         
             self.setTextFieldValueAndUpdateConfig("transactionTo\(transaction.toUser!.objectId)", value: Formatter.formatCurrencyAsString(transaction.amount), cell: self.billSplitCells[transaction.toUser!])
-        //c++
         }
-        
-//        if let v = self.purchase.billSplitDictionary[self.purchase.user] {
-//        
-//        self.setTextFieldValueAndUpdateConfig("userAmount", value: Formatter.formatCurrencyAsString(v), cell: self.formViewCells["userAmount"])
-//        }
         
         self.setTextFieldValueAndUpdateConfig("Amount", value: Formatter.formatCurrencyAsString(self.purchase.amount), cell: self.formViewCells["Amount"])
     }
@@ -232,12 +232,6 @@ extension SavePurchaseViewController: FormViewDelegate {
             purchase.localeAmount = value
             purchase.splitTheBill()
         }
-        
-//        if identifier == "userAmount" {
-//            
-//            purchase.billSplitDictionary[purchase.user] = value
-//            purchase.calculateTotalFromBillSplitDictionary()
-//        }
         
         for transaction in purchase.transactions {
             
@@ -359,6 +353,8 @@ extension SavePurchaseViewController: FormViewDelegate {
             //cell.imageView?.image = AppTools.iconAssetNamed("07-map-marker.png")
             cell.textLabel?.text = "Location"
             cell.detailTextLabel?.text = "None"
+            
+            return cell
         }
         
         return UITableViewCell()

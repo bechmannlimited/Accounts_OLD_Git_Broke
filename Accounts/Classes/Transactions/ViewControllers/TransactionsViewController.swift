@@ -48,14 +48,17 @@ class TransactionsViewController: ACBaseViewController {
     var selectedTransactionID: String?
     var didJustDelete: Bool = false
     
-    var refreshQuery: PFQuery?
-    var loadMoreQuery: PFQuery?
+    //var refreshQuery: PFQuery?
+    //var loadMoreQuery: PFQuery?
+    var query: PFQuery?
     
     var popoverViewController: UIViewController?
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        setupQuery()
+        
         if kDevice == .Pad {
         
             tableView.separatorStyle = UITableViewCellSeparatorStyle.None
@@ -88,6 +91,18 @@ class TransactionsViewController: ACBaseViewController {
         super.viewDidAppear(animated)
         
         popoverViewController = nil // to make sure
+    }
+    
+    func setupQuery() {
+        
+        let queryForFromUser = Transaction.query()
+        queryForFromUser?.whereKey("fromUser", equalTo: User.currentUser()!)
+        
+        let queryForToUser = Transaction.query()
+        queryForToUser?.whereKey("toUser", equalTo: User.currentUser()!)
+        
+        query = PFQuery.orQueryWithSubqueries([queryForFromUser!, queryForToUser!])
+        query?.includeKey("purchase")
     }
     
     func getDifferenceAndRefreshIfNeccessary(refreshControl: UIRefreshControl?) {
@@ -136,14 +151,22 @@ class TransactionsViewController: ACBaseViewController {
             noDataView.layer.opacity = 0
         }
     
+        query?.cancel()
+        query?.skip = 0
+        query?.limit = 16
         
-        refreshQuery?.cancel()
-        refreshQuery = Transaction.query()
-        refreshQuery?.includeKey("purchase")
-        refreshQuery?.whereKey("fromUser", equalTo: User.currentUser()!)
-        refreshQuery?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
+        query?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
             
-            if let transactions = objects as? [Transaction] {
+            if var transactions = objects as? [Transaction] {
+                
+                for transaction in transactions {
+                    
+                    if transaction.fromUser == transaction.toUser {
+                        
+                        let index = find(transactions, transaction)!
+                        transactions.removeAtIndex(index)
+                    }
+                }
                 
                 self.transactions = transactions
                 self.hasLoadedFirstTime = true
@@ -271,7 +294,7 @@ class TransactionsViewController: ACBaseViewController {
             self.loadMoreView.frame = CGRect(x: 0, y: 0, width: 0, height: height)
             self.tableView.tableFooterView = self.loadMoreView
             
-        }) { (sucess) -> Void in
+        }) { (success) -> Void in
             
             completion?()
         }
@@ -288,14 +311,11 @@ class TransactionsViewController: ACBaseViewController {
             
             loadMoreView.showLoader()
             
-            loadMoreQuery?.cancel()
-            loadMoreQuery = Transaction.query()
-            loadMoreQuery?.whereKey("fromUser", equalTo: User.currentUser()!)
-            loadMoreQuery?.skip = transactions.count
-            loadMoreQuery?.limit = 16
-            loadMoreQuery?.includeKey("purchase")
+            query?.cancel()
+            query?.skip = transactions.count
+            query?.limit = 16
             
-            loadMoreQuery?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
+            query?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
                 
                 if let transactions = objects as? [Transaction] {
                     
@@ -357,7 +377,7 @@ class TransactionsViewController: ACBaseViewController {
     override func viewWillDisappear(animated: Bool) {
         super.viewWillDisappear(animated)
         
-        loadMoreQuery?.cancel()
+        query?.cancel()
     }
 }
 
@@ -392,38 +412,12 @@ extension TransactionsViewController: UITableViewDelegate, UITableViewDataSource
             
             let dateString:String = transaction.purchase.purchasedDate!.toString(DateFormat.Date.rawValue)
             cell.textLabel?.text = "\(transaction.purchase.title)"
-            
-//            if transaction.purchase.user.UserID == kActiveUser.UserID {
-//                
-//                //moneyIsOwedToActiveUser
-//                amount = -amount
-//                cell.detailTextLabel?.textColor = AccountColor.negativeColor()
-//            }
-//            else {
-//                
-//                //activeUserOwes
-//                cell.detailTextLabel?.textColor = AccountColor.positiveColor()
-//            }
-        
             cell.imageView?.image = kPurchaseImage
         }
         else {
             
             let dateString:String = transaction.transactionDate.toString(DateFormat.Date.rawValue)
             cell.textLabel?.text = "\(transaction.title)"
-            
-//            if transaction.user.UserID == kActiveUser.UserID {
-//                
-//                //moneyIsOwedToActiveUser
-//                amount = -amount
-//                cell.detailTextLabel?.textColor = AccountColor.negativeColor()
-//            }
-//            else {
-//                
-//                //activeUserOwes
-//                cell.detailTextLabel?.textColor = AccountColor.positiveColor()
-//            }
-            
             cell.imageView?.image = kTransactionImage
         }
         

@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Parse
 
 public class ParseUtilities: NSObject {
    
@@ -16,6 +17,11 @@ public class ParseUtilities: NSObject {
         
             UIAlertView(title: "Error!", message: err, delegate: nil, cancelButtonTitle: "OK").show()
         }
+    }
+    
+    public class func performQueryLocallyAndRemotely(query: PFQuery?) {
+        
+        
     }
     
 }

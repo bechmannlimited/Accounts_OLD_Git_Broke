@@ -57,61 +57,38 @@ class Purchase: PFObject {
         }
     }
     
-//    func generateTransactionsFromBillSplitDictionary(completion:() -> ()) {
-//        
-//        transactions = []
-//        
-//        var c = 0
-//        var friendsToInclude = friends
-//        friendsToInclude.append(user)
-//        
-////        relationForKey("transactions").query()?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
-////            
-////            ParseUtilities.showAlertWithErrorIfExists(error)
-////            
-////            if let transactions = objects as? [Transaction] {
-////                
-////                for transaction: Transaction in transactions {
-////                    
-////                    //see if a transaction
-////                    
-////                    
-////                    
-////                    
-////                    self.relationForKey("transactions").removeObject(transaction)
-////                }
-////            }
-//        
-//            //self.saveInBackground()
-//            
-////            for user in friendsToInclude {
-////                
-////                let transaction = Transaction()
-////                transaction.fromUser = self.user
-////                transaction.toUser = user
-////                transaction.amount = self.billSplitDictionary[user]!
-////                transaction.transactionDate = self.purchasedDate!
-////                self.transactions.append(transaction)
-////            }
-//            
-//           // completion()
-//        //})
-//        
-//        
-//    }
-    
     func savePurchase(completion: (success:Bool) -> ()) {
+        
+        var isNewPurchase = objectId == nil
         
         if !modelIsValid() {
             
             completion(success: false)
         }
         
+        var sendPushNotifications: () -> () = {
+            
+            let query = PFInstallation.query()
+            
+            for transaction in self.transactions {
+                
+                query?.whereKey("User", equalTo: transaction.toUser!)
+            }
+            
+            let pushNotification = PFPush()
+            pushNotification.setQuery(query)
+            
+            let noun: String = isNewPurchase ? "added" : "updated"
+            pushNotification.setMessage("Purchase: \(self.title) \(noun)!")
+            
+            pushNotification.sendPushInBackground()
+        }
+        
         var savePurchase: () -> () = {
             
             for transaction in self.transactions {
                 
-                //again
+                // again - not 100% sure this is needed
                 transaction.purchase = self
                 transaction.transactionDate = self.purchasedDate!
                 
@@ -120,7 +97,22 @@ class Purchase: PFObject {
             
             self.saveInBackgroundWithBlock({ (success, error) -> Void in
                 
-                ParseUtilities.showAlertWithErrorIfExists(error)
+                if success {
+                    
+                    //need to set again for new purchases
+                    for transaction in self.transactions {
+                        
+                        transaction.purchase = self
+                        transaction.saveInBackground()
+                    }
+                    
+                    sendPushNotifications()
+                }
+                else {
+                    
+                    ParseUtilities.showAlertWithErrorIfExists(error)
+                }
+                
                 completion(success: success)
             })
         }
@@ -129,6 +121,7 @@ class Purchase: PFObject {
         
         for transaction in self.transactions {
             
+            // required to ensure objectid is null (restulting to null resulted in an error from localdatastore)
             let newTransaction = Transaction()
             newTransaction.title = self.title
             newTransaction.fromUser = transaction.fromUser
@@ -140,8 +133,7 @@ class Purchase: PFObject {
             newTransactions.append(transaction)
         }
         
-        // delete all previous ones
-        
+        // delete all previous transactions neccessary
         for transaction in originalTransactions {
             
             if !contains(transactions, transaction){
@@ -174,16 +166,6 @@ class Purchase: PFObject {
             
             transaction.amount = splitAmount
         }
-        
-//        self.billSplitDictionary = Dictionary<User, Double>()
-//        var amount:Double = self.amount / Double(self.friends.count + 1)
-//        
-//        for friend in self.friends {
-//            
-//            billSplitDictionary[friend] = amount
-//        }
-//        
-//        billSplitDictionary[user] = amount
     }
     
 
@@ -207,28 +189,7 @@ class Purchase: PFObject {
             errors.append("title is empty")
         }
         
-//        for friend in friends {
-//            
-//            if billSplitDictionary[friend] == nil || billSplitDictionary[friend] == 0 {
-//                
-//                errors.append("\(friend.username) hasn't got an amount associated")
-//            }
-//        }
-        
         var friendTotals:Double = 0
-        
-//        for friend in friends {
-//            
-//            if let amount = billSplitDictionary[friend] {
-//                
-//                friendTotals += amount
-//            }
-//        }
-//        
-//        if friendTotals > amount {
-//            
-//            errors.append("The amounts for the users don't add up to the total")
-//        }
         
         var c = 1
         var errorMessageString = ""
@@ -247,26 +208,7 @@ class Purchase: PFObject {
         
         return errors.count > 0 ? false : true
     }
-//    
-//    func calculateTotalFromBillSplitDictionary() {
-//        
-//        var total:Double = 0
-//        
-//        for friend in friends {
-//            
-//            if let amount = billSplitDictionary[friend] {
-//                
-//                total += amount
-//            }
-//        }
-//        
-//        if let userTotal = billSplitDictionary[user] {
-//            
-//            total += userTotal
-//        }
-//
-//        amount = total
-//    }
+
     
     func calculateTotalFromTransactions() {
         
@@ -314,7 +256,6 @@ class Purchase: PFObject {
             }
         }
     }
-    
 }
 
 extension Purchase: PFSubclassing {

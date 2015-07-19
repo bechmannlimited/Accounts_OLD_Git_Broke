@@ -62,6 +62,8 @@ class FriendsViewController: ACBaseViewController {
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
         
+        AppDelegate.registerForNotifications()
+        
         refresh(nil)
     }
     
