@@ -43,7 +43,7 @@ let kTableViewCellIpadCornerRadiusSize = CGSize(width: 5, height: 5)
 
 let kDefaultSeperatorColor = UITableView().separatorColor
 
-let kParseInstallationUserKey = "User"
+let kParseInstallationUserKey = "user"
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {

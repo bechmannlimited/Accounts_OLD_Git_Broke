@@ -44,7 +44,7 @@ class SelectUsersViewController: ACBaseViewController {
         setSelectedUsers(users)
     }
     
-    convenience init(identifier: String, user:User, selectUserDelegate: SelectUserDelegate?, allowEditing: Bool, usersToChooseFrom: Array<User>) {
+    convenience init(identifier: String, user:User?, selectUserDelegate: SelectUserDelegate?, allowEditing: Bool, usersToChooseFrom: Array<User>) {
         self.init()
         
         self.identifier = identifier
@@ -53,7 +53,10 @@ class SelectUsersViewController: ACBaseViewController {
         self.allowMultipleSelection = false
         self.users = usersToChooseFrom
         
-        setSelectedUser(user)
+        if let user = user {
+            
+            setSelectedUser(user)
+        }
     }
     
     override func viewDidLoad() {

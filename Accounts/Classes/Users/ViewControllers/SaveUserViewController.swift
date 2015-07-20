@@ -118,6 +118,9 @@ extension SaveUserViewController: FormViewDelegate {
             FormViewConfiguration.textField("Email", value: user.email, identifier: "Email"),
             FormViewConfiguration.textField("Password", value: user.password, identifier: "Password")
         ])
+        sections.append([
+            FormViewConfiguration.textField("Display name", value: user.displayName, identifier: "")
+        ])
         return sections
     }
     

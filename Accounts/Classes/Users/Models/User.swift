@@ -18,6 +18,8 @@ class User: PFUser {
     var localeDifferenceBetweenActiveUser:Double = 0
     var allInvites = [[FriendRequest]]()
     
+    @NSManaged var displayName: String?
+    
     func modelIsValid() -> Bool {
         
         return username?.length() > 0 && password?.length() > 0 && email?.length() > 0
@@ -47,10 +49,8 @@ class User: PFUser {
 
         friends = [User]()
         
-        var didLoadFromNetwork = false
-        
-        var handleObjects: ([AnyObject]?) -> () = { objects in
-            
+        User.currentUser()?.relationForKey(kParse_User_Friends_Key).query()?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
+
             if let friends = objects as? [User] {
                 
                 User.currentUser()?.friends = objects as! [User]
@@ -59,25 +59,26 @@ class User: PFUser {
                     
                     self.friends = arr
                 }
-
-                completion()
-            }
-        }
-        
-        User.currentUser()?.relationForKey(kParse_User_Friends_Key).query()?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
-            
-            didLoadFromNetwork = true
-            self.pinInBackground()
-            handleObjects(objects)
-        })
-        
-        var onlineQuery = User.currentUser()?.relationForKey(kParse_User_Friends_Key).query()
-        onlineQuery?.fromLocalDatastore()
-        onlineQuery?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
-            
-            if !didLoadFromNetwork {
                 
-                handleObjects(objects)
+                let requiredRequestsCount = self.friends.count
+                var completedRequests = 0
+                
+                for friend in self.friends{
+                    
+                    // get difference // needs a cloud code function instead
+                    PFCloud.callFunctionInBackground("DifferenceBetweenActiveUser", withParameters: ["compareUserId": friend.objectId!]) { (response, error) -> Void in
+                        
+                        let responseJson = JSON(response!)
+                        friend.localeDifferenceBetweenActiveUser = responseJson.doubleValue
+                        
+                        completedRequests++
+                        
+                        if completedRequests == requiredRequestsCount {
+                            
+                            completion()
+                        }
+                    }
+                }
             }
         })
     }

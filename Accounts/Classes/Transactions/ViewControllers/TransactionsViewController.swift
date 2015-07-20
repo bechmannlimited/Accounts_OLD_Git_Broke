@@ -84,7 +84,7 @@ class TransactionsViewController: ACBaseViewController {
             findAndScrollToCalculatedSelectedCellAtIndexPath()
         }
         
-        getDifferenceAndRefreshIfNeccessary(nil)
+        //getDifferenceAndRefreshIfNeccessary(nil)
     }
     
     override func viewDidAppear(animated: Bool) {
@@ -107,24 +107,26 @@ class TransactionsViewController: ACBaseViewController {
     
     func getDifferenceAndRefreshIfNeccessary(refreshControl: UIRefreshControl?) {
         
-        
-//        kActiveUser.getDifferenceBetweenFriend(friend, completion: { (difference, count) -> () in
-//         
-//            let previousDifference = self.friend.DifferenceBetweenActiveUser
-//            self.friend.DifferenceBetweenActiveUser = difference
-//            
-//            self.tableView.beginUpdates()
-//            self.tableView.endUpdates()
-//            
-//            if previousDifference != difference {
-//                
-//                self.executeActualRefreshByHiding(true, refreshControl: nil, take: nil, completion: nil)
-//            }
-//            else {
-//                
-//                refreshControl?.endRefreshing()
-//            }
-//        })
+        PFCloud.callFunctionInBackground("DifferenceBetweenActiveUser", withParameters: ["compareUserId": friend.objectId!]) { (response, error) -> Void in
+            
+            let responseJson = JSON(response!)
+            let difference = responseJson.doubleValue
+            
+            let previousDifference = self.friend.localeDifferenceBetweenActiveUser
+            self.friend.localeDifferenceBetweenActiveUser = difference
+            
+            self.tableView.beginUpdates()
+            self.tableView.endUpdates()
+
+            if previousDifference != difference {
+
+                self.executeActualRefreshByHiding(true, refreshControl: nil, take: nil, completion: nil)
+            }
+            else {
+                
+                refreshControl?.endRefreshing()
+            }
+        }
     }
     
     override func setupTableView(tableView: UITableView, delegate: UITableViewDelegate, dataSource: UITableViewDataSource) {

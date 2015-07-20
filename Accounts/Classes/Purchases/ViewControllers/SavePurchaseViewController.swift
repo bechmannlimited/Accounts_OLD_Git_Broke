@@ -63,6 +63,34 @@ class SavePurchaseViewController: ACFormViewController {
         }
     }
     
+    override func viewDidAppear(animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        if allowEditing && purchase.objectId == nil {
+            
+            getLocationIfFirstTime()
+        }
+    }
+    
+    func getLocationIfFirstTime() {
+        
+        LocationManager.requestPermissionForLocationIfFirstTime { (response) -> () in
+            
+            if response == .Confirm {
+                
+                var locationManager = LocationManager.sharedInstance
+                locationManager.showVerboseMessage = true
+                locationManager.autoUpdate = false
+                locationManager.startUpdatingLocationWithCompletionHandler { (latitude, longitude, status, verboseMessage, error) -> () in
+                    
+                    println("lat:\(latitude) lon:\(longitude) status:\(status) error:\(error)")
+                    println(verboseMessage)
+                    println(error)
+                }
+            }
+        }
+    }
+    
     override func refresh(refreshControl: UIRefreshControl?) {
         
         tableView.hidden = true
@@ -275,7 +303,7 @@ extension SavePurchaseViewController: FormViewDelegate {
                 
                 if response == AlertResponse.Confirm {
                     
-                    self.purchase.deleteInBackgroundWithBlock({ (succes, error) -> Void in
+                    self.purchase.deletePurchaseAndTransactions({ () -> () in
                         
                         self.navigationController?.dismissViewControllerAnimated(true, completion: nil)
                         self.navigationController?.popoverPresentationController?.delegate?.popoverPresentationControllerDidDismissPopover?(self.navigationController!.popoverPresentationController!)

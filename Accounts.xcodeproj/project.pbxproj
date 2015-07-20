@@ -47,6 +47,7 @@
 		E442C3521B52C3150061CAE6 /* FriendRequest.swift in Sources */ = {isa = PBXBuildFile; fileRef = E442C3511B52C3150061CAE6 /* FriendRequest.swift */; };
 		E47FD80E1B533B2E004B4C56 /* ParseUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = E47FD80D1B533B2E004B4C56 /* ParseUtilities.swift */; };
 		E47FD8121B5700AF004B4C56 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E47FD8111B5700AF004B4C56 /* Extensions.swift */; };
+		E47FD8141B5D7EDE004B4C56 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E47FD8131B5D7EDE004B4C56 /* LocationManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -107,6 +108,7 @@
 		E47FD80A1B53176C004B4C56 /* Accounts-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Accounts-Bridging-Header.h"; sourceTree = "<group>"; };
 		E47FD80D1B533B2E004B4C56 /* ParseUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ParseUtilities.swift; sourceTree = "<group>"; };
 		E47FD8111B5700AF004B4C56 /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		E47FD8131B5D7EDE004B4C56 /* LocationManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -358,6 +360,7 @@
 				E442C34F1B52BE030061CAE6 /* ParseKeys.swift */,
 				E47FD80D1B533B2E004B4C56 /* ParseUtilities.swift */,
 				E47FD8111B5700AF004B4C56 /* Extensions.swift */,
+				E47FD8131B5D7EDE004B4C56 /* LocationManager.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -633,6 +636,7 @@
 				E442C33C1B510E940061CAE6 /* MenuViewController.swift in Sources */,
 				E442C32D1B510E940061CAE6 /* Purchase.swift in Sources */,
 				E442C3411B510E940061CAE6 /* SaveTransactionViewController.swift in Sources */,
+				E47FD8141B5D7EDE004B4C56 /* LocationManager.swift in Sources */,
 				E442C3401B510E940061CAE6 /* Transaction.swift in Sources */,
 				E442C33B1B510E940061CAE6 /* BaseViewController+Extension.swift in Sources */,
 				E442C3501B52BE030061CAE6 /* ParseKeys.swift in Sources */,

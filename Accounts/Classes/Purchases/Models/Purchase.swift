@@ -72,7 +72,12 @@ class Purchase: PFObject {
             
             for transaction in self.transactions {
                 
-                query?.whereKey("User", equalTo: transaction.toUser!)
+                if transaction.toUser != User.currentUser() {
+                    
+                    query?.whereKey("user", equalTo: transaction.toUser!)
+                }
+                
+                println(transaction.toUser!)
             }
             
             let pushNotification = PFPush()
@@ -133,22 +138,36 @@ class Purchase: PFObject {
             newTransactions.append(transaction)
         }
         
+        var toBeDeleted = [Transaction]()
+        
         // delete all previous transactions neccessary
         for transaction in originalTransactions {
             
             if !contains(transactions, transaction){
                 
-                transaction.deleteEventually()
+                toBeDeleted.append(transaction)
+                //transaction.deleteEventually()
             }
         }
         
-        transactions = newTransactions
-        
-        PFObject.saveAllInBackground(transactions, block: { (success, error) -> Void in
+        PFObject.deleteAllInBackground(toBeDeleted, block: { (success, error) -> Void in
             
             if success {
                 
-                savePurchase()
+                self.transactions = newTransactions
+                
+                PFObject.saveAllInBackground(self.transactions, block: { (success, error) -> Void in
+                    
+                    if success {
+                        
+                        savePurchase()
+                    }
+                    else {
+                        
+                        ParseUtilities.showAlertWithErrorIfExists(error)
+                        completion(success: success)
+                    }
+                })
             }
             else {
                 
@@ -156,6 +175,10 @@ class Purchase: PFObject {
                 completion(success: success)
             }
         })
+        
+        
+        
+        
     }
     
     func splitTheBill() {
@@ -255,6 +278,29 @@ class Purchase: PFObject {
                 transactions.removeAtIndex(index)
             }
         }
+    }
+    
+    func deletePurchaseAndTransactions(completion:() -> ()) {
+        
+        relationForKey("transactions").query()?.findObjectsInBackgroundWithBlock({ (objects, error) -> Void in
+            
+            if let transactions = objects as? [Transaction] {// needed?
+                
+                PFObject.deleteAllInBackground(objects, block: { (success, error) -> Void in
+                    
+                    if success{
+                        
+                        self.deleteInBackgroundWithBlock({ (success, error) -> Void in
+                            
+                            completion()
+                            ParseUtilities.showAlertWithErrorIfExists(error)
+                        })
+                    }
+                    
+                    ParseUtilities.showAlertWithErrorIfExists(error)
+                })
+            }
+        })
     }
 }
 
