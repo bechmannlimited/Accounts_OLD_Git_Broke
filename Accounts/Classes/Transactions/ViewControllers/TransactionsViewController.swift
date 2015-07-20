@@ -223,6 +223,10 @@ class TransactionsViewController: ACBaseViewController {
                 
                 rowToDeselect = indexPath
             }
+            else if let indexPath = selectedRow {
+                
+                rowToDeselect = indexPath
+            }
             else if selectedPurchaseID == nil && selectedTransactionID == nil {
                 
                 rowToDeselect = nil // for now (needsto get id from postback)
@@ -232,11 +236,6 @@ class TransactionsViewController: ACBaseViewController {
                     tableView.scrollToRowAtIndexPath(NSIndexPath(forRow: 0, inSection: 0), atScrollPosition: .Middle, animated: false)
                 }
             }
-            else if let indexPath = selectedRow {
-                
-                rowToDeselect = indexPath
-            }
-            
             if let indexPath = rowToDeselect {
                 
                 tableView.selectRowAtIndexPath(indexPath, animated: false, scrollPosition: UITableViewScrollPosition.None)
@@ -495,7 +494,7 @@ extension TransactionsViewController: UIPopoverPresentationControllerDelegate {
         
         popoverViewController = nil
         deselectSelectedCell(tableView)
-        getDifferenceAndRefreshIfNeccessary(nil)
+        //getDifferenceAndRefreshIfNeccessary(nil)
     }
     
     func popoverPresentationControllerShouldDismissPopover(popoverPresentationController: UIPopoverPresentationController) -> Bool {
