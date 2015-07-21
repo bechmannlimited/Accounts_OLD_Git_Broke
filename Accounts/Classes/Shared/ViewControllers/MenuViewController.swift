@@ -144,10 +144,11 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
             let user = User()
             let currentUser = User.currentUser()
             
-//            user.objectId = currentUser.UserID
-//            user = currentUser.Email
-//            user.Username = currentUser.Username
-            
+//            user.objectId = currentUser!.objectId
+//            user.email = currentUser!.email
+//            user.username = currentUser!.username
+//            user.displayName = currentUser!.displayName
+//            
             v.user = User.currentUser()!
             
             navigationController?.pushViewController(v, animated: true)
@@ -158,7 +159,7 @@ extension MenuViewController: UITableViewDelegate, UITableViewDataSource {
         
         if section == kProfileSection {
             
-            return "Logged in as \(User.currentUser()!.username!)"
+            return "Logged in as \(User.currentUser()!.appropriateDisplayName())"
         }
         
         return ""

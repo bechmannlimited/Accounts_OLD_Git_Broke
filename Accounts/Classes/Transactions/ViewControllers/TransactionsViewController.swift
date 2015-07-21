@@ -65,7 +65,7 @@ class TransactionsViewController: ACBaseViewController {
         }
         
         setupTableView(tableView, delegate: self, dataSource: self)
-        title = "Transactions with \(friend.username!)"
+        title = "Transactions with \(friend.appropriateDisplayName())"
         
         addBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "add")
         navigationItem.rightBarButtonItem = addBarButtonItem
@@ -470,14 +470,14 @@ extension TransactionsViewController: UITableViewDelegate, UITableViewDataSource
     
     func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         
-//        if friend.DifferenceBetweenActiveUser > 0 {
-//            
-//            return "\(friend.Username) owes you: \(Formatter.formatCurrencyAsString(abs(friend.DifferenceBetweenActiveUser)))"
-//        }
-//        else if friend.DifferenceBetweenActiveUser < 0 {
-//            
-//            return "You owe \(friend.Username): \(Formatter.formatCurrencyAsString(abs(friend.DifferenceBetweenActiveUser)))"
-//        }
+        if friend.localeDifferenceBetweenActiveUser > 0 {
+            
+            return "\(friend.appropriateDisplayName()) owes you: \(Formatter.formatCurrencyAsString(abs(friend.localeDifferenceBetweenActiveUser)))"
+        }
+        else if friend.localeDifferenceBetweenActiveUser < 0 {
+            
+            return "You owe \(friend.appropriateDisplayName()): \(Formatter.formatCurrencyAsString(abs(friend.localeDifferenceBetweenActiveUser)))"
+        }
         
         return ""
     }

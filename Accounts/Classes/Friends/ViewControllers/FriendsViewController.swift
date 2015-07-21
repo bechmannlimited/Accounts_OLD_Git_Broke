@@ -317,7 +317,7 @@ extension FriendsViewController: UITableViewDelegate, UITableViewDataSource {
         
         let friend = data()[indexPath.section][indexPath.row]
         
-        UIAlertController.showAlertControllerWithButtonTitle("Delete", confirmBtnStyle: .Destructive, message: "Are you sure you want to remove \(friend.username!) as a friend?") { (response) -> () in
+        UIAlertController.showAlertControllerWithButtonTitle("Delete", confirmBtnStyle: .Destructive, message: "Are you sure you want to remove \(friend.appropriateDisplayName()) as a friend?") { (response) -> () in
             
             if response == .Confirm {
                 

@@ -49,7 +49,7 @@ class User: PFUser {
     
         var rc = ""
         
-        if let name = displayName{
+        if let name = displayName {
             
             rc = name
         }
