@@ -45,6 +45,22 @@ class User: PFUser {
         }
     }
     
+    func appropriateDisplayName() -> String {
+    
+        var rc = ""
+        
+        if let name = displayName{
+            
+            rc = name
+        }
+        else {
+            
+            rc = String.emptyIfNull(username)
+        }
+        
+        return rc
+    }
+    
     func getFriends(completion:() -> ()) {
 
         friends = [User]()

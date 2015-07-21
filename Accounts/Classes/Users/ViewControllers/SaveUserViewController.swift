@@ -30,9 +30,7 @@ class SaveUserViewController: ACFormViewController {
         
         showOrHideRegisterButton()
         
-        user.username = ""
-        user.password = ""
-        user.email = ""
+        
         
         super.viewDidLoad()
     }
@@ -114,12 +112,12 @@ extension SaveUserViewController: FormViewDelegate {
         
         var sections = Array<Array<FormViewConfiguration>>()
         sections.append([
-            FormViewConfiguration.textField("Username", value: user.username, identifier: "Username"),
-            FormViewConfiguration.textField("Email", value: user.email, identifier: "Email"),
-            FormViewConfiguration.textField("Password", value: user.password, identifier: "Password")
+            FormViewConfiguration.textField("Username", value: String.emptyIfNull(user.username) , identifier: "Username"),
+            FormViewConfiguration.textField("Email", value: String.emptyIfNull(user.email), identifier: "Email"),
+            FormViewConfiguration.textField("Password", value: String.emptyIfNull(user.password), identifier: "Password")
         ])
         sections.append([
-            FormViewConfiguration.textField("Display name", value: user.displayName, identifier: "")
+            FormViewConfiguration.textField("Display name", value: String.emptyIfNull(user.displayName), identifier: "DisplayName")
         ])
         return sections
     }
@@ -143,6 +141,10 @@ extension SaveUserViewController: FormViewDelegate {
             
         case "Email":
             user.email = text
+            break
+            
+        case "displayName":
+            user.displayName = text
             break
             
         default: break;

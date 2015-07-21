@@ -58,6 +58,7 @@ class FriendsViewController: ACBaseViewController {
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         
+        tableView.reloadData()
         setEditing(false, animated: false)
     }
     
@@ -240,7 +241,7 @@ extension FriendsViewController: UITableViewDelegate, UITableViewDataSource {
         
         let friend = data()[indexPath.section][indexPath.row]
         
-        cell.textLabel?.text = friend.username
+        cell.textLabel?.text = friend.appropriateDisplayName()
         let amount = friend.localeDifferenceBetweenActiveUser //abs()
         
         var tintColor = UIColor.lightGrayColor()
